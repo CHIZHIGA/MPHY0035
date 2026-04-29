@@ -138,8 +138,73 @@ Provide **quantitative analysis of co-presence behaviour**.
 * Enables behavioural comparison across days
 
 ---
-# F
-Describe the visualization task (objectives) ie: to visualize the two people in a simplified graphical representation of their home. Initially showing just their location, but in due course also showing their activity level / sleep too.
+
+# F. Visualisation Objective
+
+## Objective
+
+To visualise two participants within a simplified graphical representation of their home environment, enabling intuitive understanding of their daily spatial behaviour and interaction patterns.
+
+## Current Implementation
+
+The project has progressed **step by step**, beginning with location-only visualisation and then extending toward richer behavioural context.
+
+### Stage 1: Location-only visualisation
+
+* A **floorplan-based representation** that maps each participant’s room-level location over time
+* A **co-presence visualisation**, showing whether two participants are in the same room at each time step
+* A **temporal animation (GIF)** that illustrates how both individuals move and interact across a day or multiple days
+
+These earlier components allow:
+
+* Clear observation of **movement patterns within the home**
+* Identification of **shared vs separate activities**
+* Exploration of **daily behavioural routines**
+
+In the current codebase, the earlier two-person floorplan view is now preserved as a dedicated **location-only script**, so the original co-presence visualisation remains available as a separate milestone.
+
+### Stage 2: Initial location + activity extension
+
+The system has now been extended with an initial **location + activity prototype for AA001**.
+
+## Current Progress
+
+1. **Earlier two-person floorplan work preserved**
+
+   * Keeps the original idea of showing **AA001 and AB001 together on the same floorplan**
+   * Focuses on **location only**, without activity encoding
+   * Retains co-presence status (`TOGETHER` / `SEPARATE`) as an interpretable interaction cue
+   * Serves as the baseline visual milestone before adding activity information
+
+2. **AA001 location + activity integration completed**
+
+   * Uses `annotator.json` for room-level location
+   * Uses `auto_activity_level_20231102_094535.json` for `activityLevel`
+   * Aligns both data sources onto **10-minute visualisation frames**
+   * Resolves frame labels by selecting the category with the **largest temporal overlap**
+   * Encodes:
+     * **Location** by marker position on the floorplan
+     * **Activity level** by marker colour
+
+3. **Output now includes**
+
+   * A preserved two-person **location-only** floorplan GIF
+   * A GIF showing AA001 moving through the home over time with activity colour encoding
+   * A static first-frame image suitable for reports or poster drafts
+   * On-frame annotations for:
+     * time
+     * location
+     * activity level
+     * activity legend
+
+4. **Current limitation**
+
+   * Activity-enhanced visualisation is currently implemented for **AA001 only**
+   * The second participant is still represented in the preserved **location-only** version
+   * A full two-person activity visualisation can be added later once matching activity data becomes available
+
+---
+
 # G
 you can do a simple estimate of activity from step-count. You can do something  like steps in 10 mins, and colour code the person by steps in that 10 min interval (this is subtraction from cumulative step count)
 # H
