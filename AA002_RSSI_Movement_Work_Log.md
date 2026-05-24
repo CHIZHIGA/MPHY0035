@@ -1,0 +1,322 @@
+# AA002 RSSI Movement Location Work Log
+
+## Purpose
+
+This document records the AA002 raw-data location experiments. The aim is to move from annotation-based visualisation toward an interpretable location algorithm using:
+
+* beacon RSSI data
+* step count as a movement signal
+* existing room annotations as reference labels for evaluation
+
+The current emphasis is not machine learning. Machine learning can be kept as a later-stage extension. The main question at this stage is whether movement information can help decide when RSSI-based location estimates are reliable.
+
+## Preliminary Exploration: RSSI Representation and Feature Comparison
+
+Script:
+
+* `src/002/compare_rssi_representations_aa002.py`
+
+Outputs:
+
+* `Results/002/AA002_rssi_representation_metrics.csv`
+* `Results/002/AA002_rssi_representation_metrics_comparison.png`
+
+Figure:
+
+![AA002 RSSI representation comparison](Results/002/AA002_rssi_representation_metrics_comparison.png)
+
+This was an early exploratory stage. The aim was to understand which RSSI representation might be useful before building the main step-count algorithm. At this stage, some methods were closer to feature-based or machine-learning-style comparison.
+
+This was useful for orientation, but it is no longer the main workflow. After reconsidering the supervisor's suggestion, the project direction was adjusted:
+
+* machine learning should be treated as a later-stage extension
+* the current priority should be an interpretable algorithm
+* movement data should first be used to identify stable periods
+* RSSI should then be used to estimate location during those stable periods
+
+The exploratory comparison considered several RSSI representations:
+
+* strongest beacon
+* RSSI summary signature
+* RSSI vector signature
+* RSSI combined with step count and/or acceleration features
+
+The strongest-beacon method was the best-performing and most interpretable baseline in this early comparison. For example, in the 10-minute window comparison:
+
+| Method | Accuracy | Balanced accuracy |
+|---|---:|---:|
+| Strongest beacon | 0.648 | 0.263 |
+| Summary + step + acc signature | 0.556 | 0.246 |
+| RSSI vector signature | 0.510 | 0.196 |
+| RSSI vector + step + acc signature | 0.472 | 0.210 |
+
+### Finding: RSSI Vector Was Not Helpful Enough
+
+The full RSSI vector did not outperform the simpler strongest-beacon method. Although the vector contains more information, it appears more sensitive to missing beacon readings and RSSI noise. In this dataset, the dominant beacon signal seems to capture the main room-level pattern more reliably than the full RSSI vector signature.
+
+Practical decision:
+
+* keep strongest beacon as the main RSSI location baseline
+* avoid prioritising RSSI vector methods in the next stage
+* use RSSI vector only as a secondary comparison if needed
+
+This reduces future workload and keeps the algorithm easier to explain to the supervisor.
+
+## Main Experiment 1: Step-Count Low-Motion Filtering
+
+Script:
+
+* `src/002/step_low_motion_location_aa002.py`
+
+Outputs:
+
+* `Results/002/AA002_step_low_motion_location_metrics.csv`
+* `Results/002/AA002_step_low_motion_threshold_comparison.png`
+
+Figure:
+
+![AA002 step-count low-motion threshold comparison](Results/002/AA002_step_low_motion_threshold_comparison.png)
+
+This experiment follows the supervisor's suggestion directly:
+
+1. use a sliding time window
+2. calculate the number of steps in the window
+3. keep only low-motion windows where steps are below a threshold `n`
+4. estimate location from RSSI during these stable periods
+5. vary `n` to test performance
+
+The most important result is that low-motion windows give much better RSSI-based location accuracy.
+
+For 10-minute windows using strongest beacon:
+
+| Step threshold | Accuracy | Balanced accuracy | Coverage |
+|---:|---:|---:|---:|
+| 0 | 0.828 | 0.322 | 0.406 |
+| 5 | 0.829 | 0.322 | 0.408 |
+| 10 | 0.826 | 0.322 | 0.410 |
+| 30 | 0.799 | 0.325 | 0.612 |
+| 100 | 0.785 | 0.339 | 0.728 |
+
+Interpretation:
+
+* stricter step thresholds keep only very stable periods
+* stable low-motion windows have higher RSSI location accuracy
+* wider thresholds increase coverage but reduce reliability
+* step count is useful as a stability filter, not necessarily as a direct room predictor
+
+Plain-language conclusion:
+
+> Step count does not tell us which room the participant is in. Instead, it tells us when the participant is probably staying still. When the participant is still, the RSSI signal becomes more reliable for estimating location.
+
+This is the start of the main algorithmic workflow.
+
+## Main Experiment 2: Step-Aware Adaptive Window
+
+Script:
+
+* `src/002/adaptive_step_window_location_aa002.py`
+
+Outputs:
+
+* `Results/002/AA002_adaptive_step_window_location_metrics.csv`
+* `Results/002/AA002_adaptive_step_window_location_comparison.png`
+* `Results/002/AA002_rssi_stability_confidence_metrics.csv`
+* `Results/002/AA002_rssi_stability_confidence_comparison.png`
+
+Figure:
+
+![AA002 adaptive step-window location comparison](Results/002/AA002_adaptive_step_window_location_comparison.png)
+
+The first adaptive-window rule was:
+
+```text
+if 10min steps <= 10:
+    use 10min RSSI window
+elif 5min steps <= 20:
+    use 5min RSSI window
+else:
+    use 1min RSSI window
+```
+
+This compares pure RSSI fixed windows with a step-aware adaptive window on the same 1-minute reference timeline.
+
+| Method | Accuracy | Balanced accuracy |
+|---|---:|---:|
+| Pure RSSI 10min strongest | 0.659 | 0.267 |
+| Pure RSSI 5min strongest | 0.658 | 0.263 |
+| Adaptive step-window strongest | 0.650 | 0.258 |
+| Pure RSSI 1min strongest | 0.647 | 0.257 |
+
+Adaptive window choices:
+
+| Selected window | Fraction |
+|---|---:|
+| 1min | 0.311 |
+| 5min | 0.267 |
+| 10min | 0.422 |
+
+### Interpretation
+
+The adaptive step-window method was slightly better than the pure 1-minute RSSI baseline, but it did not outperform the best pure RSSI 10-minute baseline.
+
+This is still useful. It shows that:
+
+* pure 10-minute RSSI is already a strong baseline for AA002
+* step count alone is not enough to guarantee better adaptive-window performance
+* movement information is useful, but should be combined with RSSI stability rather than used alone
+
+Current conclusion:
+
+> Step count helps identify stable periods, but the adaptive window should also check whether the RSSI signal itself is stable.
+
+## Main Experiment 3: Step Count + RSSI Stability Adaptive Window
+
+Script:
+
+* `src/002/adaptive_step_window_location_aa002.py`
+
+Outputs:
+
+* `Results/002/AA002_adaptive_step_window_location_metrics.csv`
+* `Results/002/AA002_adaptive_step_window_location_comparison.png`
+
+Figure:
+
+![AA002 adaptive step and RSSI-stability location comparison](Results/002/AA002_adaptive_step_window_location_comparison.png)
+
+This experiment extended the adaptive-window rule by adding RSSI stability. The aim was to avoid choosing a long window based only on low step count. A long window should be used only when both movement and RSSI suggest a stable location.
+
+RSSI stability was measured using:
+
+* `max_strongest_prop`: how often the same beacon is the strongest within the window
+* `strongest_second_gap`: the RSSI gap between the strongest and second strongest beacon
+
+The new rule was:
+
+```text
+if 10min steps <= 10
+and 10min strongest beacon proportion >= 0.70
+and 10min strongest-second gap >= 3:
+    use 10min RSSI window
+elif 5min steps <= 20
+and 5min strongest beacon proportion >= 0.60
+and 5min strongest-second gap >= 2:
+    use 5min RSSI window
+else:
+    use 1min RSSI window
+```
+
+Comparison using strongest beacon:
+
+| Method | Accuracy | Balanced accuracy |
+|---|---:|---:|
+| Pure RSSI 10min strongest | 0.659 | 0.267 |
+| Pure RSSI 5min strongest | 0.658 | 0.263 |
+| Adaptive step only | 0.650 | 0.258 |
+| Pure RSSI 1min strongest | 0.647 | 0.257 |
+| Adaptive step + RSSI stability | 0.647 | 0.257 |
+
+Window choices for adaptive step + RSSI stability:
+
+| Selected window | Fraction |
+|---|---:|
+| 1min | 0.700 |
+| 5min | 0.152 |
+| 10min | 0.148 |
+
+### Interpretation
+
+Adding RSSI stability made the adaptive algorithm more conservative. It selected the 1-minute window much more often and selected the 10-minute window less often.
+
+However, this did not improve accuracy. The adaptive step + RSSI stability method performed similarly to the pure 1-minute RSSI baseline and slightly below the step-only adaptive version.
+
+This suggests that the current RSSI stability thresholds may be too strict. The algorithm avoids some long-window errors, but it also loses the benefit of stable 10-minute RSSI windows, which are already strong for AA002.
+
+Plain-language conclusion:
+
+> Adding RSSI stability is conceptually reasonable, but the first threshold rule was too conservative. It used short windows too often, so it did not improve performance.
+
+## Main Experiment 4: RSSI Stability as a Confidence Score
+
+Script:
+
+* `src/002/adaptive_step_window_location_aa002.py`
+
+Outputs:
+
+* `Results/002/AA002_rssi_stability_confidence_metrics.csv`
+* `Results/002/AA002_rssi_stability_confidence_comparison.png`
+
+Figure:
+
+![AA002 RSSI stability confidence comparison](Results/002/AA002_rssi_stability_confidence_comparison.png)
+
+After the hard adaptive-window rule did not improve accuracy, the next test used step count and RSSI stability as a confidence score instead of forcing a different window size.
+
+The main prediction remains:
+
+```text
+10-minute strongest-beacon RSSI estimate
+```
+
+Then each prediction is assigned a confidence label using:
+
+* 10-minute step count
+* 10-minute strongest-beacon stability
+* 10-minute strongest-second RSSI gap
+
+Confidence result:
+
+| Confidence | Accuracy | Balanced accuracy | Coverage |
+|---|---:|---:|---:|
+| High | 0.845 | 0.317 | 0.148 |
+| Medium | 0.711 | 0.314 | 0.303 |
+| Low | 0.580 | 0.232 | 0.549 |
+
+### Interpretation
+
+This is a more useful result than hard adaptive window switching.
+
+The confidence score clearly separates reliable and less reliable predictions:
+
+* high-confidence windows have very high accuracy
+* medium-confidence windows are still better than low-confidence windows
+* low-confidence windows contain more movement or weaker RSSI stability and are less reliable
+
+Plain-language conclusion:
+
+> Step count and RSSI stability are useful for estimating how trustworthy a location prediction is. They may be better used as a confidence/uncertainty measure than as a hard rule for changing window size.
+
+## Current Research Conclusion
+
+The experiments so far suggest:
+
+1. The early feature comparison was useful, but the main direction should not be machine learning yet.
+2. Strongest beacon is the strongest and simplest RSSI baseline for AA002.
+3. Full RSSI vector matching does not currently improve performance and can be deprioritised.
+4. Step count is valuable for identifying low-motion periods where RSSI location estimates are more reliable.
+5. A first step-only adaptive window is reasonable, but does not yet beat the best pure RSSI fixed-window baseline.
+6. Hard adaptive window switching with RSSI stability was too conservative and did not improve accuracy.
+7. RSSI stability works better as a confidence score: high-confidence windows achieved much higher accuracy than low-confidence windows.
+
+## Next Step: Use Confidence-Aware Location Output
+
+The next algorithm should keep the strongest-beacon 10-minute RSSI estimate as the main location prediction, then attach a confidence label based on:
+
+* step count
+* strongest-beacon stability
+* strongest-second RSSI gap
+
+Proposed output:
+
+```text
+time
+predicted_location
+confidence_label: High / Medium / Low
+confidence_score
+possible_transition flag
+```
+
+This would allow the final location algorithm to say not only where the participant probably is, but also how reliable that estimate is.
+
+This is likely more useful than forcing a hard switch between 1-minute, 5-minute, and 10-minute windows.

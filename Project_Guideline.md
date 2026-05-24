@@ -1,3 +1,7 @@
+# Running env
+
+conda activate sds_env
+
 # A. `plot_location_from_annotation.py`
 
 ## Objective
@@ -206,10 +210,124 @@ The system has now been extended with an initial **location + activity prototype
 ---
 
 # G
-you can do a simple estimate of activity from step-count. You can do something  like steps in 10 mins, and colour code the person by steps in that 10 min interval (this is subtraction from cumulative step count)
+
+## Activity estimation progress
+
+An initial **AA002 activity-level estimation prototype** has now been completed.
+
+The current implementation is in:
+
+* `src/002/estimate_activity_level_aa002.py`
+
+It estimates activity level at **10-minute resolution** using three approaches:
+
+1. **Step-count baseline**
+
+   * Uses `SAMPLES_Step_count.csv`
+   * Converts cumulative step count into steps per 10-minute interval
+   * Uses this as a simple baseline for activity intensity
+
+2. **Acceleration-based estimate**
+
+   * Uses `SAMPLES_HE_ACC.csv`
+   * Computes acceleration magnitude:
+
+     * `sqrt(acc_x^2 + acc_y^2 + acc_z^2)`
+
+   * Uses variation in acceleration magnitude within each 10-minute interval to estimate activity level
+   * This is a better activity signal than step count alone, because it can detect non-walking movement
+
+3. **Initial fused estimate**
+
+   * Combines step-count features and acceleration features
+   * Uses an initial unsupervised machine learning approach
+   * This is a prototype rather than a final validated model
+   * The purpose is to explore whether combining sensors gives a more robust activity estimate
+
+The output now includes:
+
+* `auto_activity_level_steps_10min.json`
+* `auto_activity_level_acc_10min.json`
+* `auto_activity_level_fused_10min.json`
+* `Results/002/AA002_activity_level_comparison_10min.csv`
+
+The comparison CSV allows direct comparison between the step-only estimate, the acceleration-only estimate, and the fused estimate.
+
 # H
-you want a visualization that combines location and activity. You have not yet finished this, but you need to show progress trying to do this.
+
+## Location + activity visualisation progress
+
+An initial **AA002 location + activity visualisation prototype** has now been completed.
+
+The current implementation is in:
+
+* `src/002/floorplan_AA002_activity_10min_gif.py`
+
+It creates a **10-minute GIF for one day** using:
+
+* AA002 location annotations from `annotator.json`
+* The step-count activity estimate
+* The acceleration activity estimate
+* The fused activity estimate
+
+Because Home A002 does not include a floorplan image, the visualisation uses the existing simplified **2 × 2 floorplan representation**:
+
+* Bedroom
+* Kitchen
+* Living
+* Office
+
+The GIF shows three panels side by side:
+
+* Step count estimate
+* Acceleration estimate
+* Fused estimate
+
+For each 10-minute interval:
+
+* Location is represented by marker position
+* Activity level is represented by marker colour
+* The three methods can be compared visually
+* Context labels highlight cases such as bedroom activity, transition activity, and disagreement between step count and acceleration
+
+The output now includes:
+
+* `Results/002/AA002_activity_location_10min_compare_2023-07-17.gif`
+* `Results/002/AA002_activity_location_10min_compare_2023-07-17_first_frame.png`
+
+This visualisation demonstrates progress toward combining **where the participant is** with **how active they are**. It also helps assess whether step count, acceleration magnitude, or the fused estimate is most consistent with the location context.
+
 # I
+
 You also need to describe plan to improve analysis of location by an algorithm you can write directly using combination of raw data from beacons (RSSI) and bracelet sensors (accelerometer).
-# J
-It is better to use the acceration magnitude than to use step count
+
+The next step is to improve the location analysis algorithm by combining:
+
+* raw beacon RSSI data
+* bracelet accelerometer features
+* existing room-level annotations as reference labels
+
+The aim is to move beyond rule-based nearest-beacon or annotation-only location analysis and develop an algorithmic method that can infer room-level location more robustly from raw sensor data.
+
+## Future research questions and direction
+
+The current activity-level outputs should be treated as **estimated labels rather than ground truth**.
+
+At this stage, there is no manually verified activity-level dataset for AA002. The estimates are generated from step count, acceleration magnitude, and an initial fused model. Location context can help judge whether an estimate is reasonable, but it cannot fully prove that the activity label is correct. For example, bedroom at night may support `Sleep` or `Sedentary`, while indoor transition or out-of-home periods may support higher activity. However, location alone is not a true activity label.
+
+For the next stage, the existing room-level location annotations can be used as **training labels** for a supervised location model. The input features would come from:
+
+* raw beacon RSSI values
+* accelerometer-derived features
+* time-window summaries such as mean, variance, signal strength ranking, and movement intensity
+
+The goal would be to train a model that maps raw RSSI and accelerometer features to room-level location. Once trained, the same model could be applied to newly collected RSSI and accelerometer data to automatically infer location.
+
+The longer-term research direction is to estimate **location and activity together**. Step count and acceleration can provide activity-level information, while RSSI and location annotations provide spatial context. These can be combined in a joint workflow:
+
+* predict room-level location from RSSI and accelerometer features
+* estimate activity level from step count and acceleration magnitude
+* compare predicted activity with location context
+* use cross-validation against annotated location data, and any available manually checked activity examples, to evaluate how well the combined method matches observed behaviour
+
+This would make the analysis more robust than using step count, acceleration, or location alone. The current fused activity estimate and location + activity GIF should therefore be understood as a prototype and visual validation step toward this more complete sensor-fusion approach.

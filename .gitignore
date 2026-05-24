@@ -1,0 +1,23 @@
+# Ignore everything by default
+*
+
+# Keep directories traversable so selective unignore rules can work
+!*/
+
+# Keep repository docs and source code
+!.gitignore
+!*.md
+!**/*.md
+!src/
+!src/**
+
+# Still ignore generated/cache files inside src
+src/**/__pycache__/
+src/**/*.pyc
+src/**/*.pyo
+
+# Common local/project artifacts
+.vscode/
+.codex/
+Data/
+Results/
