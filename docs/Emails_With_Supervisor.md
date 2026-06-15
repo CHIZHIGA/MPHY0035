@@ -1,4 +1,6 @@
-# 2026-05-18 Derek
+# SecondPhase
+
+## 2026-05-18 Derek
 
 What I really want you to do is work on raw data analysis. Rather than just doing visualization of the json files, I want you to recalculate location from the raw data.
 
@@ -6,7 +8,7 @@ I would like you to create an algorithm to use a combination of both beacon RSSI
 
 The simplest measure movement is step count, so you could, start with that: When calculating position, you could use a sliding window to identify periods with very little motion (eg: fewer than n steps, where you can vary n to find a good performance) and in that period of time, identify the corresponding strongest beacon signature (simplest the beacon that has the highest proportion of time being lowest RSSI, but you could also try something that used the RSSI vector instead of lowest value). 
 
-# 2026-05-20 czg
+## 2026-05-20 czg
 
 Thank you for your suggestions. I have thought more about the next step, and my understanding is that the main aim should be to move beyond visualising the existing annotation JSON files and instead recalculate room-level location directly from the raw sensor data.
 
@@ -24,7 +26,7 @@ In the later stage, I would also like to explore a supervised machine learning a
 
 Overall, my planned direction is to first compare RSSI representations, then build an interpretable sliding-window baseline using RSSI and movement data, and finally explore whether a machine learning model can improve the robustness of room-level location estimation.
 
-# 2026-05-20 Derek
+## 2026-05-20 Derek
 
 Great description! Looks like you used some AI to help you write that description, which is fine.   
 
@@ -32,7 +34,7 @@ There is plenty more data for you to look at in due course.
 
 The one additional point you might want to look at is analysis of data from two people simultaneously. But I agree with the initial steps you propose.
 
-# 2026-05-24 czg
+## 2026-05-24 czg
 
 I have been working on the raw-data location analysis for AA002, following your suggestion to combine beacon RSSI data with movement information.
 
@@ -58,7 +60,7 @@ I wanted to ask your advice on the next direction. Do you think I should revise 
 
 My current thought is that acceleration may provide a more sensitive movement measure, especially for detecting small movements or transitions that step count misses. But I would appreciate your guidance on whether the next step should focus on improving the step-count algorithm, moving to accelerometer features, or treating movement mainly as a confidence measure for RSSI-based location estimates.
 
-# 2026-05-25 Derek
+## 2026-05-25 Derek
 
 Thanks for your email. Great to hear your progress. 
 
@@ -69,7 +71,7 @@ I have some questions.
 
 I will try to send you links to some more data for you to look at with your algorithms and see if we see more difference. 
 
-# 2026-05-26 czg
+## 2026-05-26 czg
 
 Thank you very much for your comments. They were very helpful, especially your point about how the existing annotation file should be interpreted.
 
@@ -82,3 +84,76 @@ So my current understanding is that the AA002 results are still useful for check
 Regarding the second point, I think additional datasets with more ambiguous RSSI patterns would be very helpful. The AA002 dataset seems relatively clean, so the strongest RSSI signal already performs quite well, and step count mainly seems useful for identifying when the RSSI-based estimate is more or less reliable. With a dataset that has more ambiguity, and ideally independent reference labels, I could better evaluate whether step count or accelerometer features improve the location algorithm.
 
 My next plan would be to apply the same workflow to the new data if available: first compare the RSSI-only baseline, then add step count or accelerometer-based movement features, and finally evaluate whether the fused method improves performance against the reference labels.
+
+# ThirdPhase_X001
+
+## 2026-06-08 Derek
+
+I’ve uploaded some more data. This has no reference but is an interesting comparator. Can you try to download and start analyzing? There are two people with the same beacon configuration. 
+
+The beacon labels are given below in the screenshot.
+
+Let me know how you get on - and if you have any questions. I have more data I can find for you after this. 
+
+## 2026-06-09 czg
+
+I have carried out an initial exploratory analysis of the new Home_X001 dataset and exported today’s work log as a PDF. Since this dataset does not have reference location labels, I treated the analysis as descriptive rather than as a formal accuracy evaluation.
+So far, I have checked the data availability for the left-wrist and right-wrist devices, summarised the RSSI beacon detections, extracted 10-minute step count and accelerometer movement features, and compared the two devices over their shared recording period. The aim was to understand whether the dataset is usable and how the RSSI and movement patterns behave before applying the algorithm more formally.
+I would like to arrange a meeting with you to discuss the next steps. In particular, I would like your advice on:
+Which comparison analyses would be most valuable for the X001 dataset.
+How best to apply the RSSI + movement algorithm to datasets without reference labels.
+Whether the next datasets you mentioned may include reference location labels, and whether I should continue developing the algorithm following the direction we discussed previously.
+I also wanted to let you know my upcoming project deadlines. I have a poster presentation on 12 June, my FYP presentation/defence is on 23 July, and the final dissertation submission deadline is before 31 July. It would be very helpful to discuss the analysis direction soon so that I can plan the remaining work clearly.
+Would you be available for a meeting sometime this week or early next week?
+
+# ForthPhase
+
+## 2026-06-10 Derek
+
+Thanks for sending this through. Great to see you making progress. Can you tell me what tools you are using for this analysis? It is very important in your masters project that you describe the tools you use (Claude code or whatever) and how you sed them. When using AI tools, you need to design some tests to confirm that the results are as expected - it is easy for AI tools not to work as needed.
+
+In this case I know a bit about the data and so this is what I want you to do,
+
+1. This is not one person wearing two bracelets, but two people each wearing one bracelet (it is the “subject type” that is the important one).
+
+2. You are correct that you should only use the period of 170 hours when the datasets overlap. One bracelet collects for longer than the other.
+
+3. Because there are two people, we can look at how much time they are together; it isn’t left/right comparison that is interesting, but Subject/Study-partner comparison.
+
+   a. Time together in the home
+
+      - Same location in home  
+      - Different location in home
+
+   b. In home, one away from home
+
+   c. Both away from home.
+
+4. The work you have done with beacon algorithms is very interesting. I want you to extend that. I want you to look at different ways of calculating locations.
+
+   a. Closest beacons over 10 mins, and also 5 mins and 30 mins
+
+   b. Combine movement with beacon data – so have the window length depend on movement. You could look at varying window lengths for calculating location from 1–30 mins depending on how many steps are in that period. You could try different step thresholds, so for example define “stationary” as:
+      - 1 or fewer steps in the window
+      - 2 or fewer steps in the window
+      - 5 or fewer steps in the window
+      - 10 or fewer steps in the window
+
+   c. Use an automatic clustering approach: you can identify location using the combination of beacon data. You want to ignore periods where there is lots of movement (step count or acceleration magnitude is high) and just look at periods with little movement. You can then find distinct location clusters that are based on RSSI values during periods of non-movement. You can then process all the data (including when movement occurs) to generate a location timeline.
+
+   d. Feel free to adapt these approaches or use different ones, or one that a LLM proposes. Ensure you justify your choice.
+
+5. Generate an integrated timeline showing location (based on the different algorithms above).
+
+   a. SUBJECT
+
+   b. STUDY_PARTNER
+
+   Show location for each on the timeline so we can see when together and apart. Measure those metrics of time together / apart by location.
+
+Then let me see the data and I will comment on it
+
+I want the key message of your report to be about using combination of movement and RSSI to estimate location. We don’t have much “gold standard” data but we have some we can le you have if you make progress on this work.
+
+Another approach I would like you to use is to additionally use the pressure sensor data in identify which floor someone is in in the house- both beacon and bracelet contain pressure sensors, and you can try to use this information to work out which floor someone is in. The data you currently are using is in an apartment so there is only one floor but I can let yo have more data after you’ve done work with teh love.
+
