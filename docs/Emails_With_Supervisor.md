@@ -157,3 +157,110 @@ I want the key message of your report to be about using combination of movement 
 
 Another approach I would like you to use is to additionally use the pressure sensor data in identify which floor someone is in in the house- both beacon and bracelet contain pressure sensors, and you can try to use this information to work out which floor someone is in. The data you currently are using is in an apartment so there is only one floor but I can let yo have more data after you’ve done work with teh love.
 
+## 2026-06-15 czg
+
+I have attached my current Fourth Phase progress report for the Home_X001 dataset. Based on your previous feedback, I focused on using RSSI together with movement data to estimate location and co-presence patterns for SUBJECT and STUDY_PARTNER.
+
+Since this dataset does not currently have independent reference location labels, I have treated the results as descriptive estimates rather than formal validation. The report includes the fixed-window RSSI baseline, the step-adaptive RSSI method, exploratory low-motion RSSI clustering, and integrated visualisations comparing these approaches.
+
+I would appreciate your feedback on whether this framing is appropriate, and whether the next step should be to refine the step-adaptive method, add accelerometer features, or wait for data with reference labels for more formal evaluation.
+
+## 2026-06-15 Derek
+
+The sort of plot you have below could b looked at in more detail(Home X001 ForthPhase Point 5: Method comparison timeline).  
+
+I suggest you do one line per day and then put the days one on top of the other so we have a timeline over the week, one day at a time.
+
+You could present the information in the  following ways:
+
+1. One line per day, showing co-presence. This should make it easier to see patterns in the data within and between days.
+2. 2 lines per day: showing location calculation (so you could see at a glance which location each participant was in)
+3. Trying to include some measure of physical activity to the plot (this only works for one line per person)  It is hard to do this with color alone, but you could modulate the width of the line with some measure of activity like step-count per minute or average acceleration magnitude per a minute
+
+You can generate these representations  for the different ways in which you calculated locations
+
+In particular we want to identify periods of time / locations where the different location algorithms give different answers and try to better understand that - and we can review these data representations and see which are most consistent with the collected data.   Let me know if you have any questions. 
+
+## 2026-06-17
+
+### Note1
+
+#### czg
+
+Following your feedback on the timeline visualisations, I have prepared a new set of single-day line figures for Home_X001. I focused on 14 January 2026, because this day has relatively clear mapped RSSI coverage, so the line patterns are easier to inspect.
+In the attached document, I have separated the figures into two groups:
+
+1. Showing co-presence
+This compares the estimated together/apart states across the different methods.
+2. Showing location calculation
+This shows SUBJECT and STUDY_PARTNER estimated locations, with line width representing step-count activity.
+
+I included the fixed RSSI methods at 5, 10, and 30 minutes, the step-adaptive RSSI method, and the low-motion RSSI clustering method. My current interpretation is that the step-adaptive RSSI method is the most useful main method, because it combines movement and RSSI in an interpretable way. The clustering method is useful as an exploratory signal-state analysis, but seems less suitable as the main room-level location method.
+
+#### Derek
+
+I have some questions.
+
+1. Display of multi-day data
+
+I would like you to draw one line per day, not just show a single day. The co-presence plot should have one line per 24 hour period, so if there are 3 days, there would three lines one above the other. The location calculation should have a pair of lines (for subject and study partner) for each day.
+
+It is best to displays lines from mid-day to mid-day not midnight to midnight, as then the sleep period is uninterrupted.  This is important as the night time patterns are a useful validation point: if there are lots of room changes while sleeping this is not correct!  
+
+2. I do not understand your algorithms. 
+
+Can you please give more detail on how you calculate the ste-padaptive RSSI and the low-motion RSSI-clustering.    
+
+3. Please explain how you calculate the plots with the line thickness modulated by activity: 
+
+Are you using step data for that? If so. How?
+Some results appear inconsistent of different variants of your algorithm. For example look at 4b and 4c for study partner. 
+
+How can the grey periods (which means no beacons visible because the person is away from home) become blue (meaning in the bathroom)?
+
+
+4. The data I gave you was quite difficult and I thought it would be good at showing differences between algoirthms. 
+
+Please keep working on this dataset and I’ll also get you some more to look at. 
+
+### Note2
+
+#### czg
+
+I would appreciate your advice on whether this is the right direction for the final analysis, and what you think the next step should be. In particular, I would be grateful for your guidance on whether I should refine the step-adaptive method further, add accelerometer features, or focus more on preparing the final report with the current results.
+
+#### Derek
+
+I would like you to do some more analysis and visualization - see my points above.     
+
+I am preparing some more data for you.   
+
+In parallel, you should be starting to write the report outline for me to review. 
+
+### Note3 
+
+#### czg
+
+I also wanted to note the remaining module deadlines:
+- Project Talks slides submission: 17:00, Wednesday 22 July 2026
+- Project Talks: Thursday 23 and Friday 24 July 2026
+- Final Report submission: Friday 31 July 2026
+I am planning to start writing the report gradually now. Although the analysis is still developing, my current plan is to begin structuring the report around the completed work and update it as the project progresses. I would really appreciate any advice you have on how best to frame the report and which results should be prioritised.
+
+#### Derek
+
+I think the message of the report should broadly be:
+1. Explain the application: better understand activities and behaviors including social interaction between multiple people
+2. Your goal is to develop analysis and visualization methods for combination of activity and RSSI-derived location data
+3. You explore different methods for integrating both the analysis and visualization of the multiple data sources
+4. We need to consider metrics of success. I’ll try to get you some more data to help with this.
+
+# FifthPhase
+
+## 2026-06-24 Derek
+
+I’ve uploaded more data
+
+In this folder there is data that includes in in each case a reference location in a separate analysis folder. So the raw data folders should be linkable to the analysis folders. In general there is only one person in each data set, though there is one or two with two people. 
+
+Have a look and let me know if you have any questions. This should enable you to evaluate which of your algorithms is most accurate against self-report location. 
