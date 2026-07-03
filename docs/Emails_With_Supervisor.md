@@ -264,3 +264,45 @@ I’ve uploaded more data
 In this folder there is data that includes in in each case a reference location in a separate analysis folder. So the raw data folders should be linkable to the analysis folders. In general there is only one person in each data set, though there is one or two with two people. 
 
 Have a look and let me know if you have any questions. This should enable you to evaluate which of your algorithms is most accurate against self-report location. 
+
+Thanks for all this additional work. You are beginning to have interesting result now - and with the new data I’ve sent you links to, you can potentially measure accuracy of location (in general there isn’t colocation in all that data, but there is location so you an assess accuracy of location for each dataset for your different algorithms and we can try to decide which algorithm
+
+Now that you are able to process data effectively,l we need to look at statistical measures as well as visualizations.
+
+Here are some specific comments. 
+
+### 1
+
+For comparing different location algorithms you can look either at the location time series plots, or the co-occurance bar charts. They are two different ways of displays similarities and differences between algorithms. I think you should try to display all algorithms together. You can’t, however, draw many conclusions from a single dataset, which is one reason I wanted you to have more data to look at. 
+
+### 2
+
+I think your cluster approach is very interesting, but  you might want to consider making the clustering model using data from both SUBJECT and STUDY_PARTNER together - they are in the same space, and it would be interesting to see how much difference there is if you use a single cluster for both compared to separate clusters for each. 
+
+### 3
+
+I don’t understand your confidence score heat map. 
+
+### 4
+
+This representation is helpful (I’m just showing one example —— 4a fixed 30min RSSI). However, I dlno’t understand how the co-presence line is consistent wit the other data. Looking at the Subject and Study-partner plots, you can see that there is mis-labelling of bedroom vs bathroom for Subject, with this algorithm, yet the co-presence doesn’t show that. Can you look again?
+
+### 5
+
+The tables that summarize co-presence by window size are a good way of showing overall agreement between the algorithm - and you should quantify these. You can look at measures o agreement between the approaches. If you can process the data I sent you where there are hand annotations, you can also look at measures of positive and negative percent agreement between your algorithms and 
+
+# SixPhase
+
+## 2026-07-01 Derek
+
+This data(data-80 hour single user) in someone in a home with 2 floors. What you could try to do here is use the pressure sensor to work out which floor someone is one.
+
+Each beacon has a pressure value
+The bracelet has a pressure value
+Difference in pressure between beacon and bracelet
+
+When working out the closest beacon, it may be that a beacon the floor above or floor below has highest RSSI (if the floor is just wood for example) but the pressure sensor enables you to also look at pressure difference between beacon and bracelet.  
+
+Note: when you look at pressure difference, you need to first remove any spikes and then consider the window width
+
+It would be very interesting if you could also look at this pressure data in your algorithm as an additional type of novelty
