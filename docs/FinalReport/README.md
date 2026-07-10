@@ -1,5 +1,11 @@
 # MSc Final Report Writing Instructions for Codex
 
+Working title:
+
+**Combining Wearable Sensor and Environmental Beacon Data to Better Understand Lived Experience of Patients**
+
+This title should guide the report framing. The report should present localisation, sensor fusion, co-presence, and behavioural metrics as methods for understanding lived experience, rather than as isolated engineering tasks.
+
 ## 1. Official PFR Requirements
 
 This report must strictly follow the official MSc Project Final Report requirements.

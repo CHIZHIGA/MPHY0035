@@ -306,3 +306,33 @@ When working out the closest beacon, it may be that a beacon the floor above or 
 Note: when you look at pressure difference, you need to first remove any spikes and then consider the window width
 
 It would be very interesting if you could also look at this pressure data in your algorithm as an additional type of novelty
+
+## 2026-07-05 czg
+
+I have started the Sixth Phase work using the new 80-hour single-user dataset. Following your suggestion, I first analysed the pressure difference between the bracelet and the beacon pressure sensors to infer the user’s floor.
+The pressure data appear useful for floor-level localisation. After cleaning short pressure spikes and longer bracelet pressure artefacts, I used the bracelet-minus-beacon pressure differences to separate the beacons into two floor groups. I then generated a 5-minute pressure-derived floor timeline. ACC data were used as supporting evidence: most pressure-derived floor changes were accompanied by increased acceleration variability, suggesting that the pressure floor timeline is generally plausible rather than mainly caused by pressure artefacts.
+I then combined the pressure-derived floor estimate with RSSI. The raw strongest RSSI beacon sometimes came from a beacon on a different floor from the pressure-inferred floor. Using pressure as the main floor-level constraint, I corrected these cases by selecting the strongest RSSI beacon on the pressure-inferred floor. This changed 56 out of 848 five-minute windows, corresponding to 96.6% of the raw RSSI/pressure floor mismatches where a same-floor RSSI candidate was available. The corrected RSSI floor timeline aligned much better with the pressure floor timeline than the raw RSSI timeline.
+My next step is to combine this with the previous 4b movement-adaptive RSSI approach. I plan to use ACC to classify windows into different movement states, then apply adaptive RSSI window sizes depending on movement level. The aim is to test whether movement-adaptive smoothing can make the beacon timeline more stable while still preserving genuine location transitions.
+
+## 2026-07-05 Derek
+
+In your final presentation and report, you will want to describe the challenge - indoor navigation and co-presence detection, using fusion wearable sensor data and environment beacon data, and describe the different approaches.
+
+Two additional peace of work you are now quite close to is:
+
+1. Quantifying stair-climbing (number of ascent / descent and time per ascent/descent)
+2. Measuring room transitions per day (number of room transitions per day)
+
+Of course these only apply indoors when we have beacon data.   We may want to therefore normalize these to the number of hours indoor (number of room transitions per waking hour indoor), for example:
+
+The floor transitions associated with accelerometer signal are of course results of going up or down stairs. You can, therefore, make some interesting measurements:
+
+1. Number of stair climbs per day (assent and descent) 
+2. Time taken to ascend /descend).  This latter measure is a really interesting one of mobility. It would be great if you could try to find these events in the data.
+
+You can use a similar approach to looking a rom transitions: changes between rooms (whether on same or different floor) associated with physical activity (from acceleration).   We will have some room transitions that are associated with change in RSSI but without significant movement. We want to ignore these, and focus on those room transitions that are associated with movement eg: at least 10 steps or some measure of acceleration magnitude . 
+
+So it would be great if you could move to the next stage of using the data to quanitfy these metics of behavior 
+
+I have quite a large amount of additional data I could let you look at from people with dementia if you have some evidence of this working. 
+

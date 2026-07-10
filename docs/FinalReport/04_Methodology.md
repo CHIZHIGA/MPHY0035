@@ -1,12 +1,12 @@
 # 4. Methodology
 
-Writing status: reorganised draft based on the 2026-06-29 supervisor feedback. Sections 4.1-4.5 are drafted; Section 4.6 remains partly reserved for the final labelled-data evaluation and hybrid method details.
+Writing status: reorganised draft based on the 2026-06-29 supervisor feedback and later Sixth Phase development. Sections 4.1-4.6 are drafted; Section 4.7 remains partly reserved for the final labelled-data evaluation and hybrid method details.
 
-This chapter describes the methods used to combine RSSI-derived room-level location, wearable movement data, and co-presence visualisation. The work developed over several project stages, but the chapter is organised by methodological logic rather than by work-log chronology. This structure follows the background and objectives: preprocessing multi-source sensor data, establishing interpretable RSSI baselines, adding movement-aware location estimation, exploring RSSI-vector methods, extending the analysis to co-presence, and evaluating methods according to the available reference evidence.
+This chapter describes the methods used to combine RSSI-derived room-level location, wearable movement data, environmental sensor context, and behaviour visualisation. The work developed over several project stages, but the chapter is organised by methodological logic rather than by work-log chronology. This structure follows the background and objectives: preprocessing multi-source sensor data, establishing interpretable RSSI baselines, adding movement-aware and floor-aware location estimation, exploring RSSI-vector methods, extending the analysis to co-presence and behavioural metrics, and evaluating methods according to the available reference evidence.
 
 ## 4.1 Data Sources and Preprocessing
 
-The project used several related data sources across its development. Early work used existing annotation and activity files to establish how room-level behaviour could be visualised. Subsequent analyses used raw RSSI, step-count, and accelerometer data from wearable devices. Home_X001 provided a two-person no-reference dataset for SUBJECT/STUDY_PARTNER co-presence analysis. Later labelled datasets were introduced to support stronger reference-label evaluation.
+The project used several related data sources across its development. Early work used existing annotation and activity files to establish how room-level behaviour could be visualised. Subsequent analyses used raw RSSI, step-count, and accelerometer data from wearable devices. Home_X001 provided a two-person no-reference dataset for SUBJECT/STUDY_PARTNER co-presence analysis. Later labelled datasets were introduced to support stronger reference-label evaluation. A final 80-hour single-user two-floor dataset added bracelet and beacon pressure data, allowing floor-aware localisation and behavioural mobility metrics to be explored.
 
 The first preprocessing task was timestamp alignment. Annotation intervals, RSSI readings, step-count records, and accelerometer samples were converted into common time representations so that location and movement features could be compared within the same windows. For annotation-based visualisation, room labels were mapped onto fixed visualisation intervals using the label with the largest overlap or the dominant label within a window. For raw-data analysis, RSSI and movement features were calculated over fixed or adaptive time windows.
 
@@ -21,6 +21,8 @@ sqrt(acc_x^2 + acc_y^2 + acc_z^2)
 ```
 
 The mean and variability of acceleration magnitude provided movement-intensity descriptors beyond step count alone. These movement features were not used as direct room labels; instead, they provided context for whether an RSSI estimate was likely to represent a stable location or a transition period.
+
+For the two-floor dataset, pressure preprocessing was added as a vertical-location signal. Bracelet pressure was cleaned to reduce obvious artefacts, beacon pressure values were grouped into floor-level pressure baselines, and bracelet-minus-beacon pressure differences were used to infer whether the participant was more likely to be on the first or second floor. Pressure was treated as a floor constraint rather than a room classifier.
 
 The overall annotation-based visualisation workflow is summarised in Figure 4.1, the AA002 raw-data processing workflow is summarised in Figure 4.2, and the Home_X001 two-person alignment workflow is summarised in Figure 4.3. These figures show the development from processed annotation visualisation to raw multi-source sensor alignment.
 
@@ -139,7 +141,27 @@ The integrated timeline layout is shown schematically in Figure 4.8.
 
 **Figure 4.8. Integrated multi-day timeline design for no-reference algorithm comparison. Co-presence, SUBJECT location, and STUDY_PARTNER location were displayed on aligned daily timelines, with colour encoding location state and line width providing movement context.**
 
-## 4.6 Evaluation Strategy
+## 4.6 Pressure-Floor-Aware Localisation and Behavioural Metrics
+
+The Sixth Phase extended the RSSI and movement framework by adding pressure-derived floor context in an 80-hour single-user two-floor home dataset. This phase addressed a limitation of RSSI-only localisation in multi-floor homes: a strong beacon signal may come from a different floor because BLE signals can propagate through the building. Pressure was therefore used as the main vertical-location signal, while RSSI remained the main room or beacon proximity signal.
+
+The pressure analysis used bracelet pressure and environmental beacon pressure. The beacon pressure medians separated into two floor groups, interpreted as first-floor and second-floor beacon groups. For each 5-minute window, the bracelet pressure was compared with each floor-group pressure baseline, and the floor whose pressure difference was closest to the estimated same-floor baseline was selected. A small smoothing step was used to reduce very short isolated floor flips.
+
+Accelerometer features were used to assess whether pressure-derived floor changes were supported by movement. A floor shift was marked as ACC-supported when the acceleration magnitude variability or raw acceleration spikes increased within the shift window or neighbouring windows. ACC was used as supporting evidence rather than as the primary floor signal, because pressure is the more direct indicator of vertical movement.
+
+The pressure-derived floor estimate was then combined with RSSI. If the raw strongest RSSI beacon was on a different floor from the pressure-inferred floor, the floor-aware rule selected the strongest available RSSI beacon on the pressure-inferred floor. This direct rule treated pressure as a vertical constraint and RSSI as the within-floor proximity signal. The method was intentionally interpretable: it did not replace RSSI, but constrained RSSI when cross-floor ambiguity was likely.
+
+After constructing the floor-aware RSSI timeline, the analysis moved from moment-by-moment location estimation to behavioural metrics. Three preliminary metrics were derived:
+
+| Behavioural metric | Main signal | Supporting signal | Methodological interpretation |
+|---|---|---|---|
+| Stair transitions | Pressure-derived floor changes | ACC support | Floor changes were classified as ascent or descent and refined using pressure-ramp duration |
+| Sleep-location candidates | Low-motion long-stay periods | RSSI beacon/floor consistency | Night-time low-motion episodes were summarised by dominant beacon and floor |
+| Active room transitions | Pressure-floor-aware RSSI changes | ACC motion windows | Room or beacon transitions were counted during awake or moving periods and normalised by active time |
+
+These metrics were treated as descriptive behavioural summaries, not independently verified clinical outcomes. Their purpose was to show how the sensor-fusion pipeline can move beyond location labels toward context-aware descriptions of home behaviour.
+
+## 4.7 Evaluation Strategy
 
 Writing status: partly reserved for completion after the fifth phase is stable.
 
@@ -151,5 +173,15 @@ TODO later:
 
 - Complete the labelled-data evaluation description after the fifth phase is stable.
 - Add the final hybrid 4b + 4c method if it remains in the final report.
-- Summarise validation checks, including non-empty output checks, timestamp checks, metadata role checks, and co-presence duration checks.
+- Summarise validation checks, including non-empty output checks, timestamp checks, metadata role checks, co-presence duration checks, pressure-floor consistency checks, and behavioural-metric duration checks.
 - Clarify final terminology for "accuracy", "agreement with existing annotations", and "RSSI-derived estimates".
+
+## 4.8 Use of AI-Assisted Coding Tools
+
+Writing status: placeholder to be expanded after the final codebase and report are stable.
+
+AI-assisted coding tools were used during the project as part of the development workflow. Their role was to support code drafting, debugging, refactoring, figure-planning, documentation structure, and report organisation. They were not treated as an automatic source of scientific conclusions. The analysis decisions, execution of scripts, inspection of outputs, interpretation of results, and final responsibility for the report remained with the student.
+
+The use of these tools required explicit verification. Generated or modified code was checked against the project data structure, run on the relevant datasets, and inspected through output files, figures, row counts, timestamp ranges, metadata checks, and consistency checks. This was important because AI-generated suggestions can contain incorrect file paths, unsuitable assumptions about data formats, over-confident interpretations, or code that appears plausible but does not match the actual repository.
+
+The final version of this section should briefly describe how AI assistance was used effectively: by giving narrowly scoped tasks, requiring the tool to inspect existing project files before editing, keeping changes traceable through work logs, and validating outputs before using them as evidence in the report. Further detail can be placed in Appendix E rather than in the main methodology chapter.
