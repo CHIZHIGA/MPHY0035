@@ -233,8 +233,11 @@ def build_duration_details(events):
 def build_daily_summary(events, floor_timeline):
     floor_timeline = floor_timeline.copy()
     floor_timeline["event_date"] = local_date(floor_timeline["time"])
+    observed_floor_windows = floor_timeline[
+        floor_timeline["pressure_floor_observed"].fillna(False)
+    ]
     indoor_hours = (
-        floor_timeline.groupby("event_date")
+        observed_floor_windows.groupby("event_date")
         .size()
         .mul(WINDOW_MINUTES / 60)
         .rename("pressure_floor_observed_hours")

@@ -52,11 +52,18 @@ def add_room_transition_features(frame):
     )
     updated["previous_floor_aware_beacon"] = updated[RSSI_BEACON_COL].shift(1)
     updated["previous_floor_aware_floor"] = updated[RSSI_FLOOR_COL].shift(1)
+    updated["rssi_gap_before_minutes"] = (
+        updated["time"].diff().dt.total_seconds() / 60
+    )
+    updated["rssi_window_contiguous"] = updated["time"].diff().eq(
+        pd.Timedelta(minutes=WINDOW_MINUTES)
+    )
     valid_current = updated[RSSI_BEACON_COL].notna()
     valid_previous = updated["previous_floor_aware_beacon"].notna()
     updated["room_transition"] = (
         valid_current
         & valid_previous
+        & updated["rssi_window_contiguous"]
         & updated[RSSI_BEACON_COL].ne(updated["previous_floor_aware_beacon"])
     )
     updated["floor_transition_from_rssi_beacon"] = (
@@ -99,6 +106,8 @@ def build_transition_events(timeline):
         "from_beacon",
         "to_beacon",
         "transition_pair",
+        "rssi_gap_before_minutes",
+        "rssi_window_contiguous",
         "from_floor",
         "to_floor",
         "floor_transition_from_rssi_beacon",

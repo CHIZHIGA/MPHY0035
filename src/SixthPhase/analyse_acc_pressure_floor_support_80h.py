@@ -78,8 +78,14 @@ def build_acc_5min_features(acc):
 def build_shift_support_table(floor_timeline, acc_features):
     merged = floor_timeline.merge(acc_features, on="time", how="left")
     floor_col = "pressure_inferred_floor_smoothed_label"
-    merged["pressure_floor_shift"] = merged[floor_col].ne(merged[floor_col].shift())
-    merged.loc[merged.index[0], "pressure_floor_shift"] = False
+    previous_floor = merged[floor_col].shift()
+    comparable_floor = merged[floor_col].fillna("__missing_floor__")
+    merged["pressure_floor_shift"] = (
+        merged[floor_col].notna()
+        & previous_floor.notna()
+        & comparable_floor.ne(comparable_floor.shift())
+        & merged["time"].diff().eq(pd.Timedelta(minutes=5))
+    )
 
     rows = []
     for row_index in merged.index[merged["pressure_floor_shift"].fillna(False)]:
@@ -256,7 +262,7 @@ def plot_acc_pressure_floor_support(floor_timeline, acc_features, shift_support)
     axes[0].legend(
         axes[0].get_legend_handles_labels()[0] + shift_handles,
         axes[0].get_legend_handles_labels()[1]
-        + ["ACC-supported shift", "Unsupported shift (U1-U4)"],
+        + ["ACC-supported shift", "Unsupported shift (U labels)"],
         fontsize=8,
         loc="upper left",
     )

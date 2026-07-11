@@ -100,6 +100,10 @@ def build_floor_aware_rssi_table(sensor_features, floor_timeline, acc_features, 
         "pressure_floor_confidence",
         "pressure_floor_margin_hpa",
         "pressure_floor_distance_hpa",
+        "environmental_beacon_available",
+        "long_environmental_data_gap",
+        "confirmed_out_of_home",
+        "pressure_floor_observed",
     ]
     merged = sensor_features.merge(floor_timeline[keep_floor_cols], on="time", how="left")
     merged = merged.merge(
@@ -116,6 +120,12 @@ def build_floor_aware_rssi_table(sensor_features, floor_timeline, acc_features, 
         how="left",
     )
     merged = mark_acc_supported_shift_windows(merged, shift_support)
+    merged["rssi_gap_before_minutes"] = (
+        merged["time"].diff().dt.total_seconds() / 60
+    )
+    merged["rssi_observation_contiguous"] = merged["time"].diff().eq(
+        pd.Timedelta(minutes=5)
+    )
 
     merged["rssi_strongest_beacon_floor"] = merged["strongest_beacon"].map(
         BEACON_TO_FLOOR
@@ -265,6 +275,10 @@ def build_consistency_table(floor_aware):
         "pressure_inferred_floor_smoothed_label",
         "pressure_floor_confidence",
         "pressure_floor_margin_hpa",
+        "environmental_beacon_available",
+        "pressure_floor_observed",
+        "rssi_gap_before_minutes",
+        "rssi_observation_contiguous",
         "acc_motion_score",
         "near_acc_supported_floor_shift",
         "near_unsupported_floor_shift",

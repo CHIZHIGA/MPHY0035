@@ -15,6 +15,8 @@ Room transition metrics currently use:
 
 - location source: `pressure_floor_bruteforce_rssi_beacon`
 - awake/motion rule: `acc_magnitude_std_clean > 0.010`
+- continuity rule: a transition is counted only between adjacent, continuously
+  observed 5-min beacon windows; data-gap boundaries are excluded.
 - transition support rule: a beacon transition is ACC-supported when the
   transition window or either adjacent 5-min window is awake/moving.
 

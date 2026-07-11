@@ -31,6 +31,7 @@ CLOSEST_OUTPUT = RESULTS_DIR / "new80h_pressure_closest_beacon_5min.csv"
 BASELINE_OUTPUT = RESULTS_DIR / "new80h_pressure_same_floor_baseline_estimate.csv"
 FLOOR_TIMELINE_OUTPUT = RESULTS_DIR / "new80h_pressure_inferred_floor_timeline_5min.csv"
 FLOOR_SEGMENTS_OUTPUT = RESULTS_DIR / "new80h_pressure_inferred_floor_segments.csv"
+ENVIRONMENTAL_GAPS_OUTPUT = RESULTS_DIR / "new80h_long_environmental_data_gaps.csv"
 GROUP_PLOT_OUTPUT = RESULTS_DIR / "new80h_beacon_pressure_floor_group_offsets.png"
 DIFFERENCE_PLOT_OUTPUT = (
     RESULTS_DIR / "new80h_bracelet_beacon_pressure_difference_timeline.png"
@@ -66,6 +67,25 @@ USER_FLOOR_LABELS = {
     "floor_1": "1F",
     "floor_2": "2F",
 }
+
+WINDOW_MINUTES = 5
+LONG_ENVIRONMENTAL_GAP_MINUTES = 60
+
+# These two long beacon absences were later confirmed by participant feedback as
+# out-of-home periods. The wearable streams remain available, but home beacon
+# pressure and RSSI are absent.
+CONFIRMED_OUT_OF_HOME_GAPS = [
+    {
+        "gap_id": "out_of_home_1",
+        "start_time": pd.Timestamp("2026-06-16 11:40:00+00:00"),
+        "end_time": pd.Timestamp("2026-06-16 13:40:00+00:00"),
+    },
+    {
+        "gap_id": "out_of_home_2",
+        "start_time": pd.Timestamp("2026-06-18 15:45:00+00:00"),
+        "end_time": pd.Timestamp("2026-06-18 19:50:00+00:00"),
+    },
+]
 
 
 def pressure_to_height_meters(delta_hpa):
@@ -367,7 +387,11 @@ def smooth_short_floor_runs(floors, max_run_rows=2):
             index += 1
             continue
         start = index
-        while index + 1 < len(values) and values[index + 1] == values[start]:
+        while (
+            index + 1 < len(values)
+            and pd.notna(values[index + 1])
+            and values[index + 1] == values[start]
+        ):
             index += 1
         end = index
         run_length = end - start + 1
@@ -376,6 +400,7 @@ def smooth_short_floor_runs(floors, max_run_rows=2):
         if (
             run_length <= max_run_rows
             and pd.notna(previous_value)
+            and pd.notna(next_value)
             and previous_value == next_value
             and previous_value != values[start]
         ):
@@ -385,21 +410,86 @@ def smooth_short_floor_runs(floors, max_run_rows=2):
     return pd.Series(values, index=smoothed.index)
 
 
+def build_environmental_availability(differences):
+    observed_times = differences["time"].drop_duplicates().sort_values()
+    full_time_index = pd.date_range(
+        observed_times.iloc[0], observed_times.iloc[-1], freq=f"{WINDOW_MINUTES}min"
+    )
+    availability = pd.DataFrame({"time": full_time_index})
+    availability = availability.merge(
+        observed_times.to_frame(), on="time", how="left", indicator=True
+    )
+    availability["environmental_beacon_available"] = availability["_merge"].eq("both")
+    availability = availability.drop(columns="_merge")
+    availability["long_environmental_data_gap"] = False
+    availability["confirmed_out_of_home"] = False
+
+    rows = []
+    missing = ~availability["environmental_beacon_available"]
+    run_id = (missing.ne(missing.shift())).cumsum()
+    for _, run in availability.loc[missing].groupby(run_id[missing]):
+        gap_start = run["time"].iloc[0]
+        gap_end = run["time"].iloc[-1]
+        missing_windows = len(run)
+        missing_minutes = missing_windows * WINDOW_MINUTES
+        if missing_minutes < LONG_ENVIRONMENTAL_GAP_MINUTES:
+            continue
+
+        matched_feedback_gap = next(
+            (
+                gap
+                for gap in CONFIRMED_OUT_OF_HOME_GAPS
+                if gap_start == gap["start_time"] and gap_end == gap["end_time"]
+            ),
+            None,
+        )
+        gap_id = (
+            matched_feedback_gap["gap_id"]
+            if matched_feedback_gap is not None
+            else f"long_environmental_gap_{len(rows) + 1}"
+        )
+        confirmed_out_of_home = matched_feedback_gap is not None
+        availability.loc[run.index, "long_environmental_data_gap"] = True
+        availability.loc[run.index, "confirmed_out_of_home"] = confirmed_out_of_home
+        previous_time = availability.loc[run.index.min() - 1, "time"]
+        next_time = availability.loc[run.index.max() + 1, "time"]
+        rows.append(
+            {
+                "gap_id": gap_id,
+                "gap_start_time": gap_start,
+                "gap_end_time": gap_end,
+                "missing_windows": missing_windows,
+                "missing_minutes": missing_minutes,
+                "previous_observed_time": previous_time,
+                "next_observed_time": next_time,
+                "data_pattern": "wearable_present_environmental_beacons_absent",
+                "confirmed_out_of_home": confirmed_out_of_home,
+                "gap_interpretation": (
+                    "participant-confirmed out-of-home period"
+                    if confirmed_out_of_home
+                    else "unexplained long environmental beacon data gap"
+                ),
+            }
+        )
+    return availability, pd.DataFrame(rows)
+
+
 def build_pressure_floor_timeline(differences, baseline_hpa, floor_beacons):
-    timeline = differences[["time", "bracelet_pressure_hpa"]].copy()
+    availability, _ = build_environmental_availability(differences)
+    timeline = availability.merge(differences, on="time", how="left")
     distance_cols = []
 
     for floor_id, beacons in floor_beacons.items():
         available_beacons = [
             beacon
             for beacon in beacons
-            if f"bracelet_minus_{beacon}_hpa" in differences.columns
+            if f"bracelet_minus_{beacon}_hpa" in timeline.columns
         ]
         diff_cols = [f"bracelet_minus_{beacon}_hpa" for beacon in available_beacons]
         group_diff_col = f"{floor_id}_group_pressure_difference_hpa"
         distance_col = f"{floor_id}_distance_to_same_floor_baseline_hpa"
         timeline[f"{floor_id}_beacons"] = ",".join(available_beacons)
-        timeline[group_diff_col] = differences[diff_cols].apply(
+        timeline[group_diff_col] = timeline[diff_cols].apply(
             lambda row: row.dropna().median() if row.notna().any() else np.nan,
             axis=1,
         )
@@ -407,7 +497,9 @@ def build_pressure_floor_timeline(differences, baseline_hpa, floor_beacons):
         distance_cols.append(distance_col)
 
     distance_frame = timeline[distance_cols]
-    closest_distance_col = distance_frame.idxmin(axis=1)
+    closest_distance_col = distance_frame.apply(
+        lambda row: row.idxmin() if row.notna().any() else pd.NA, axis=1
+    )
     timeline["pressure_inferred_floor"] = closest_distance_col.str.replace(
         "_distance_to_same_floor_baseline_hpa", "", regex=False
     )
@@ -429,9 +521,19 @@ def build_pressure_floor_timeline(differences, baseline_hpa, floor_beacons):
     timeline["pressure_inferred_floor_smoothed"] = smooth_short_floor_runs(
         timeline["pressure_inferred_floor"], max_run_rows=2
     )
+    # Smoothing may fill a short missing run between equal floor labels. Keep
+    # every unavailable environmental-beacon window explicitly unlabeled.
+    timeline.loc[
+        ~timeline["environmental_beacon_available"],
+        "pressure_inferred_floor_smoothed",
+    ] = pd.NA
     timeline["pressure_inferred_floor_smoothed_label"] = timeline[
         "pressure_inferred_floor_smoothed"
     ].map(USER_FLOOR_LABELS)
+    timeline["pressure_floor_observed"] = (
+        timeline["environmental_beacon_available"]
+        & timeline["pressure_inferred_floor_smoothed_label"].notna()
+    )
     return timeline
 
 
@@ -441,8 +543,15 @@ def build_pressure_floor_segments(floor_timeline):
     index = 0
     while index < len(floor_values):
         floor = floor_values[index]
+        if pd.isna(floor):
+            index += 1
+            continue
         start = index
-        while index + 1 < len(floor_values) and floor_values[index + 1] == floor:
+        while (
+            index + 1 < len(floor_values)
+            and pd.notna(floor_values[index + 1])
+            and floor_values[index + 1] == floor
+        ):
             index += 1
         end = index
         segment = floor_timeline.iloc[start : end + 1]
@@ -736,10 +845,26 @@ def plot_pressure_floor_timeline(floor_timeline):
 
 
 def floor_transition_times(floor_timeline):
-    changed = floor_timeline["pressure_inferred_floor_smoothed"].ne(
-        floor_timeline["pressure_inferred_floor_smoothed"].shift()
+    floor = floor_timeline["pressure_inferred_floor_smoothed"]
+    comparable_floor = floor.fillna("__missing_floor__")
+    changed = (
+        floor.notna()
+        & floor.shift().notna()
+        & comparable_floor.ne(comparable_floor.shift())
+        & floor_timeline["time"].diff().eq(pd.Timedelta(minutes=WINDOW_MINUTES))
     )
-    return floor_timeline.loc[changed.fillna(False), "time"].iloc[1:]
+    return floor_timeline.loc[changed.fillna(False), "time"]
+
+
+def add_missing_time_rows_for_plot(frame, frequency_minutes=5):
+    full_time_index = pd.date_range(
+        frame["time"].min(),
+        frame["time"].max(),
+        freq=f"{frequency_minutes}min",
+    )
+    plotted = frame.set_index("time").reindex(full_time_index)
+    plotted.index.name = "time"
+    return plotted.reset_index()
 
 
 def plot_cleaned_pressure_and_floor_alignment(
@@ -753,6 +878,7 @@ def plot_cleaned_pressure_and_floor_alignment(
     transitions = floor_transition_times(floor_timeline)
     x_min = max(beacon_pressure["time"].min(), floor_timeline["time"].min())
     x_max = min(beacon_pressure["time"].max(), floor_timeline["time"].max())
+    beacon_pressure_for_plot = add_missing_time_rows_for_plot(beacon_pressure)
 
     fig, axes = plt.subplots(
         3,
@@ -764,8 +890,8 @@ def plot_cleaned_pressure_and_floor_alignment(
 
     for beacon in beacon_cols:
         axes[0].plot(
-            beacon_pressure["time"],
-            beacon_pressure[beacon],
+            beacon_pressure_for_plot["time"],
+            beacon_pressure_for_plot[beacon],
             linewidth=0.8,
             alpha=0.85,
             label=f"Beacon {beacon}",
@@ -911,6 +1037,7 @@ def main():
         differences, baseline_hpa, USER_FLOOR_BEACONS
     )
     floor_segments = build_pressure_floor_segments(floor_timeline)
+    _, environmental_gaps = build_environmental_availability(differences)
     group_map = group_table.set_index("beacon")["pressure_group"]
     closest["pressure_closest_group"] = closest["pressure_closest_beacon"].map(group_map)
 
@@ -921,6 +1048,7 @@ def main():
     closest.to_csv(CLOSEST_OUTPUT, index=False)
     floor_timeline.to_csv(FLOOR_TIMELINE_OUTPUT, index=False)
     floor_segments.to_csv(FLOOR_SEGMENTS_OUTPUT, index=False)
+    environmental_gaps.to_csv(ENVIRONMENTAL_GAPS_OUTPUT, index=False)
 
     outputs = [
         BEACON_GROUP_OUTPUT,
@@ -930,6 +1058,7 @@ def main():
         CLOSEST_OUTPUT,
         FLOOR_TIMELINE_OUTPUT,
         FLOOR_SEGMENTS_OUTPUT,
+        ENVIRONMENTAL_GAPS_OUTPUT,
         plot_beacon_groups(group_table, pairwise),
         plot_bracelet_beacon_differences(differences, beacon_cols),
         plot_bracelet_beacon_differences_with_baseline(
@@ -965,6 +1094,8 @@ def main():
     )
     floor_summary["approx_hours"] = floor_summary["five_min_windows"] * 5 / 60
     print(floor_summary.to_string(index=False))
+    print("\nLong environmental beacon data gaps:")
+    print(environmental_gaps.to_string(index=False))
 
 
 if __name__ == "__main__":

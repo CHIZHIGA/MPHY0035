@@ -77,6 +77,11 @@ def build_runs(frame):
     previous_index = None
     for index, row in frame.iterrows():
         is_candidate = bool(row["sleep_candidate_window"])
+        contiguous_with_previous = (
+            previous_index is not None
+            and row["time"] - frame.loc[previous_index, "time"]
+            == pd.Timedelta(minutes=WINDOW_MINUTES)
+        )
         if is_candidate and start_index is None:
             start_index = index
         elif (
@@ -84,6 +89,7 @@ def build_runs(frame):
             and (
                 not is_candidate
                 or row["sleep_night"] != frame.loc[previous_index, "sleep_night"]
+                or not contiguous_with_previous
             )
         ):
             runs.append((start_index, previous_index))
