@@ -8,24 +8,6 @@ I would like you to create an algorithm to use a combination of both beacon RSSI
 
 The simplest measure movement is step count, so you could, start with that: When calculating position, you could use a sliding window to identify periods with very little motion (eg: fewer than n steps, where you can vary n to find a good performance) and in that period of time, identify the corresponding strongest beacon signature (simplest the beacon that has the highest proportion of time being lowest RSSI, but you could also try something that used the RSSI vector instead of lowest value). 
 
-## 2026-05-20 czg
-
-Thank you for your suggestions. I have thought more about the next step, and my understanding is that the main aim should be to move beyond visualising the existing annotation JSON files and instead recalculate room-level location directly from the raw sensor data.
-
-My plan is to focus on AA002 first. I would first compare different ways of representing the raw beacon RSSI data, since this is the main spatial signal for room-level location. One simple approach is to use summary features, such as the strongest beacon, mean RSSI, maximum RSSI, signal ranking, or the difference between the strongest and second strongest beacon. Another approach is to use the full RSSI vector across all available beacons, which may preserve more information about the room-level signal signature. I can compare these RSSI representations against the existing room-level annotations to see which gives better location estimates.
-
-After establishing an RSSI-based baseline, I would then combine RSSI with movement information. I would start with step count, as this is the simplest movement measure. For each sliding time window, step count can be used to identify low-motion periods, where the RSSI signature is likely to be more stable and informative for room-level location.
-
-I would also like to make the sliding window adaptive rather than fixing it only by time of day. The algorithm could start from a short base window and expand the window when the data suggest a stable state, for example low step count, low acceleration variation, and a stable RSSI signature. If movement increases or the RSSI pattern changes quickly, the algorithm would use a shorter window to capture possible room transitions. In this way, longer windows would naturally occur during sleep or other low-motion periods, while shorter windows would be used during active or transitional periods.
-
-After the step-count baseline, I would like to test accelerometer-derived features as well. Step count is simple and interpretable, but acceleration may capture non-walking movement. Therefore, I would like to compare RSSI only, RSSI with step count, RSSI with accelerometer features, and RSSI with both step count and accelerometer features.
-
-The existing room-level annotations can be used as reference labels for evaluation. I can compare the estimated location against the annotated location using measures such as accuracy and a confusion matrix. This would allow me to assess which RSSI representation and which combination of movement features performs best.
-
-In the later stage, I would also like to explore a supervised machine learning approach, where RSSI features, step count, and accelerometer features are used as input features, and the annotated room-level locations are used as training labels. This would allow me to evaluate whether a fused model can improve room-level location estimation compared with simpler rule-based or feature-based methods.
-
-Overall, my planned direction is to first compare RSSI representations, then build an interpretable sliding-window baseline using RSSI and movement data, and finally explore whether a machine learning model can improve the robustness of room-level location estimation.
-
 ## 2026-05-20 Derek
 
 Great description! Looks like you used some AI to help you write that description, which is fine.   
@@ -33,32 +15,6 @@ Great description! Looks like you used some AI to help you write that descriptio
 There is plenty more data for you to look at in due course. 
 
 The one additional point you might want to look at is analysis of data from two people simultaneously. But I agree with the initial steps you propose.
-
-## 2026-05-24 czg
-
-I have been working on the raw-data location analysis for AA002, following your suggestion to combine beacon RSSI data with movement information.
-
-So far, I have found two main results.
-
-First, the pure RSSI strongest-beacon baseline is already quite strong for AA002. When I compared fixed windows of 1, 5, and 10 minutes, the performance was relatively similar, with the 5-minute and 10-minute windows only slightly better than 1 minute. This suggests that, for this participant, the strongest beacon already captures much of the room-level location information.
-
-Second, I tested whether step count could improve the location estimate by controlling the window size adaptively. I tried two adaptive-window approaches:
-
-1. Step-count adaptive window  
-   The algorithm uses a longer RSSI window when step count is low, and a shorter RSSI window when step count is higher. For example, if the 10-minute step count is very low, the algorithm uses a 10-minute RSSI window; if movement is higher, it falls back to 5-minute or 1-minute windows.
-
-2. Step count + RSSI stability adaptive window  
-   I then added RSSI stability, so that a long window is only used when both movement is low and the RSSI signature is stable. I measured RSSI stability using the proportion of time the same beacon is strongest, and the gap between the strongest and second strongest beacon.
-
-However, neither adaptive-window method improved the overall accuracy compared with the best pure RSSI baseline. The pure 10-minute strongest-beacon RSSI baseline remained slightly better.
-
-That said, step count still seems useful. When I filtered for low-motion windows, RSSI-based location estimates became much more reliable. For example, 10-minute windows with very low step count achieved much higher accuracy than the overall RSSI baseline. This suggests that step count may be more useful as a confidence or stability indicator, rather than as a direct way to improve every location estimate.
-
-My current interpretation is that the algorithm can estimate location mainly from RSSI, while movement information may help indicate when the estimate is more or less reliable. For example, low step count and stable RSSI could indicate a high-confidence location estimate, while higher movement or unstable RSSI could indicate lower confidence or a possible transition period.
-
-I wanted to ask your advice on the next direction. Do you think I should revise the adaptive-window algorithm further, for example by changing the thresholds or the way RSSI stability is used? Or would it be better to try replacing step count with accelerometer-derived movement features, since acceleration may capture non-walking movement better than step count?
-
-My current thought is that acceleration may provide a more sensitive movement measure, especially for detecting small movements or transitions that step count misses. But I would appreciate your guidance on whether the next step should focus on improving the step-count algorithm, moving to accelerometer features, or treating movement mainly as a confidence measure for RSSI-based location estimates.
 
 ## 2026-05-25 Derek
 
@@ -71,20 +27,6 @@ I have some questions.
 
 I will try to send you links to some more data for you to look at with your algorithms and see if we see more difference. 
 
-## 2026-05-26 czg
-
-Thank you very much for your comments. They were very helpful, especially your point about how the existing annotation file should be interpreted.
-
-I realise now that I should not describe the previous results as true location accuracy. In my analysis, I was using the existing annotator.json labels as the reference for comparison, so the value I reported was really the agreement between my algorithm output and the existing annotation file, rather than accuracy against an independent ground-truth location label.
-
-After checking the annotation file more carefully, I found that it is not an independent manually verified location dataset. It is based on a max-RSSI approach, and it also contains intervals labelled using other sensors such as accelerometer and pressure. In addition, some labels are not simple room labels, for example Indoor transition, Out, and Unknown. My current algorithm is therefore only a simplified reimplementation using fixed sliding windows and strongest-beacon signatures, so it does not exactly reproduce the original annotation process. This helps explain why the agreement is around 66% rather than 100%.
-
-So my current understanding is that the AA002 results are still useful for checking whether the algorithm behaves consistently with the existing RSSI-derived annotation, but they cannot show whether adding step count genuinely improves true location estimation. For that, I agree that data with independent reference location labels would be much more useful.
-
-Regarding the second point, I think additional datasets with more ambiguous RSSI patterns would be very helpful. The AA002 dataset seems relatively clean, so the strongest RSSI signal already performs quite well, and step count mainly seems useful for identifying when the RSSI-based estimate is more or less reliable. With a dataset that has more ambiguity, and ideally independent reference labels, I could better evaluate whether step count or accelerometer features improve the location algorithm.
-
-My next plan would be to apply the same workflow to the new data if available: first compare the RSSI-only baseline, then add step count or accelerometer-based movement features, and finally evaluate whether the fused method improves performance against the reference labels.
-
 # ThirdPhase_X001
 
 ## 2026-06-08 Derek
@@ -94,17 +36,6 @@ I’ve uploaded some more data. This has no reference but is an interesting comp
 The beacon labels are given below in the screenshot.
 
 Let me know how you get on - and if you have any questions. I have more data I can find for you after this. 
-
-## 2026-06-09 czg
-
-I have carried out an initial exploratory analysis of the new Home_X001 dataset and exported today’s work log as a PDF. Since this dataset does not have reference location labels, I treated the analysis as descriptive rather than as a formal accuracy evaluation.
-So far, I have checked the data availability for the left-wrist and right-wrist devices, summarised the RSSI beacon detections, extracted 10-minute step count and accelerometer movement features, and compared the two devices over their shared recording period. The aim was to understand whether the dataset is usable and how the RSSI and movement patterns behave before applying the algorithm more formally.
-I would like to arrange a meeting with you to discuss the next steps. In particular, I would like your advice on:
-Which comparison analyses would be most valuable for the X001 dataset.
-How best to apply the RSSI + movement algorithm to datasets without reference labels.
-Whether the next datasets you mentioned may include reference location labels, and whether I should continue developing the algorithm following the direction we discussed previously.
-I also wanted to let you know my upcoming project deadlines. I have a poster presentation on 12 June, my FYP presentation/defence is on 23 July, and the final dissertation submission deadline is before 31 July. It would be very helpful to discuss the analysis direction soon so that I can plan the remaining work clearly.
-Would you be available for a meeting sometime this week or early next week?
 
 # ForthPhase
 
@@ -157,14 +88,6 @@ I want the key message of your report to be about using combination of movement 
 
 Another approach I would like you to use is to additionally use the pressure sensor data in identify which floor someone is in in the house- both beacon and bracelet contain pressure sensors, and you can try to use this information to work out which floor someone is in. The data you currently are using is in an apartment so there is only one floor but I can let yo have more data after you’ve done work with teh love.
 
-## 2026-06-15 czg
-
-I have attached my current Fourth Phase progress report for the Home_X001 dataset. Based on your previous feedback, I focused on using RSSI together with movement data to estimate location and co-presence patterns for SUBJECT and STUDY_PARTNER.
-
-Since this dataset does not currently have independent reference location labels, I have treated the results as descriptive estimates rather than formal validation. The report includes the fixed-window RSSI baseline, the step-adaptive RSSI method, exploratory low-motion RSSI clustering, and integrated visualisations comparing these approaches.
-
-I would appreciate your feedback on whether this framing is appropriate, and whether the next step should be to refine the step-adaptive method, add accelerometer features, or wait for data with reference labels for more formal evaluation.
-
 ## 2026-06-15 Derek
 
 The sort of plot you have below could b looked at in more detail(Home X001 ForthPhase Point 5: Method comparison timeline).  
@@ -183,19 +106,7 @@ In particular we want to identify periods of time / locations where the differen
 
 ## 2026-06-17
 
-### Note1
-
-#### czg
-
-Following your feedback on the timeline visualisations, I have prepared a new set of single-day line figures for Home_X001. I focused on 14 January 2026, because this day has relatively clear mapped RSSI coverage, so the line patterns are easier to inspect.
-In the attached document, I have separated the figures into two groups:
-
-1. Showing co-presence
-This compares the estimated together/apart states across the different methods.
-2. Showing location calculation
-This shows SUBJECT and STUDY_PARTNER estimated locations, with line width representing step-count activity.
-
-I included the fixed RSSI methods at 5, 10, and 30 minutes, the step-adaptive RSSI method, and the low-motion RSSI clustering method. My current interpretation is that the step-adaptive RSSI method is the most useful main method, because it combines movement and RSSI in an interpretable way. The clustering method is useful as an exploratory signal-state analysis, but seems less suitable as the main room-level location method.
+### Part 1
 
 #### Derek
 
@@ -223,11 +134,7 @@ How can the grey periods (which means no beacons visible because the person is a
 
 Please keep working on this dataset and I’ll also get you some more to look at. 
 
-### Note2
-
-#### czg
-
-I would appreciate your advice on whether this is the right direction for the final analysis, and what you think the next step should be. In particular, I would be grateful for your guidance on whether I should refine the step-adaptive method further, add accelerometer features, or focus more on preparing the final report with the current results.
+### Part 2
 
 #### Derek
 
@@ -237,15 +144,7 @@ I am preparing some more data for you.
 
 In parallel, you should be starting to write the report outline for me to review. 
 
-### Note3 
-
-#### czg
-
-I also wanted to note the remaining module deadlines:
-- Project Talks slides submission: 17:00, Wednesday 22 July 2026
-- Project Talks: Thursday 23 and Friday 24 July 2026
-- Final Report submission: Friday 31 July 2026
-I am planning to start writing the report gradually now. Although the analysis is still developing, my current plan is to begin structuring the report around the completed work and update it as the project progresses. I would really appreciate any advice you have on how best to frame the report and which results should be prioritised.
+### Part 3 
 
 #### Derek
 
@@ -271,23 +170,23 @@ Now that you are able to process data effectively,l we need to look at statistic
 
 Here are some specific comments. 
 
-### 1
+### Part 1
 
 For comparing different location algorithms you can look either at the location time series plots, or the co-occurance bar charts. They are two different ways of displays similarities and differences between algorithms. I think you should try to display all algorithms together. You can’t, however, draw many conclusions from a single dataset, which is one reason I wanted you to have more data to look at. 
 
-### 2
+### Part 2
 
 I think your cluster approach is very interesting, but  you might want to consider making the clustering model using data from both SUBJECT and STUDY_PARTNER together - they are in the same space, and it would be interesting to see how much difference there is if you use a single cluster for both compared to separate clusters for each. 
 
-### 3
+### Part 3
 
 I don’t understand your confidence score heat map. 
 
-### 4
+### Part 4
 
 This representation is helpful (I’m just showing one example —— 4a fixed 30min RSSI). However, I dlno’t understand how the co-presence line is consistent wit the other data. Looking at the Subject and Study-partner plots, you can see that there is mis-labelling of bedroom vs bathroom for Subject, with this algorithm, yet the co-presence doesn’t show that. Can you look again?
 
-### 5
+### Part 5
 
 The tables that summarize co-presence by window size are a good way of showing overall agreement between the algorithm - and you should quantify these. You can look at measures o agreement between the approaches. If you can process the data I sent you where there are hand annotations, you can also look at measures of positive and negative percent agreement between your algorithms and 
 
@@ -306,13 +205,6 @@ When working out the closest beacon, it may be that a beacon the floor above or 
 Note: when you look at pressure difference, you need to first remove any spikes and then consider the window width
 
 It would be very interesting if you could also look at this pressure data in your algorithm as an additional type of novelty
-
-## 2026-07-05 czg
-
-I have started the Sixth Phase work using the new 80-hour single-user dataset. Following your suggestion, I first analysed the pressure difference between the bracelet and the beacon pressure sensors to infer the user’s floor.
-The pressure data appear useful for floor-level localisation. After cleaning short pressure spikes and longer bracelet pressure artefacts, I used the bracelet-minus-beacon pressure differences to separate the beacons into two floor groups. I then generated a 5-minute pressure-derived floor timeline. ACC data were used as supporting evidence: most pressure-derived floor changes were accompanied by increased acceleration variability, suggesting that the pressure floor timeline is generally plausible rather than mainly caused by pressure artefacts.
-I then combined the pressure-derived floor estimate with RSSI. The raw strongest RSSI beacon sometimes came from a beacon on a different floor from the pressure-inferred floor. Using pressure as the main floor-level constraint, I corrected these cases by selecting the strongest RSSI beacon on the pressure-inferred floor. This changed 56 out of 848 five-minute windows, corresponding to 96.6% of the raw RSSI/pressure floor mismatches where a same-floor RSSI candidate was available. The corrected RSSI floor timeline aligned much better with the pressure floor timeline than the raw RSSI timeline.
-My next step is to combine this with the previous 4b movement-adaptive RSSI approach. I plan to use ACC to classify windows into different movement states, then apply adaptive RSSI window sizes depending on movement level. The aim is to test whether movement-adaptive smoothing can make the beacon timeline more stable while still preserving genuine location transitions.
 
 ## 2026-07-05 Derek
 
@@ -336,3 +228,53 @@ So it would be great if you could move to the next stage of using the data to qu
 
 I have quite a large amount of additional data I could let you look at from people with dementia if you have some evidence of this working. 
 
+# SeventhPhase
+
+## 2026-07-07 Derek
+
+These should be interesting for you to look at as there is misclassification of night-time location as a result of beacon issue. If you combine the beaconRSSI and movement you might improve this and I’d like you to have a look. 
+
+### EF-001
+
+![EF-001](../Data/EF-001/EF-001.png)
+
+This dataset had variability in beacon signal at night that results in the closest beacon moving to an adjacent room.  Because there is very little movement you should be able to correct for this with your algorithm that combines RSSI and movement. 
+
+In this data, you can observe the sleep state during the night, but the location corresponding to the highest RSSI keeps changing.
+
+### EF-002
+
+![EF-002](../Data/EF-002/EF-002.png)
+
+The challenge in this case is that, during the night sleep, the wearer can turn over in the bed and obscure the beacon signals entirely. There is virtually no movement in this time so they don’t move room. Hopefuly you can get your algorithm to identify to 
+
+## 2026-07-12
+
+### Part 1
+
+I do think you could improve clarity of your achievements by refining some of the plots.  The figures for EF001 on page 8, and EF002 on the top of page 12 may not be as clear as they could be because you have a week of data displayed in one go, and it is too small to really see what your algorithm does and why it is better. . Displaying each 24 hour period separately could be much more clear.  For  example you could stack each 24 hour period the width of the page with the two algorithms, rather than the full 7 days.  What  you want to do is show a figure that indicates the the raw 5mm strongest RSSI gives room transitions that are implausible and are corrected by your algorithm. And you need a figure caption that clearly explains the take-home-message of the figure. 
+
+### Part 2
+
+I want you to think about whether you can explain your approach conceptional more clearly.  For example, I section 2 you show a plot of ACC magnitude std aligned with mean RSSI.   What do these two things meaning intuitively? And why are they the correct things to plot?  It is fine for you to use Codex to help you write analysis and to suggest algorithms, but you need to reflect on whether what codex proposes seems sensible. You could of course suggest that codex does something slightly different (which might be better for your project).   
+
+For example, if what we are looking at is implausible room transitions, not might be interesting to plot room transitions against acceleration magnitude, focusing on    periods  during the night in which acceleration magnitude is low, so plotting acceleration magnitude against change in beacon with highest RSSI might help illustrate that issue.   The mean RSSI doesn’t tell you about transitions, but more how close the participant is to a beacon. And I you could more clearly explain why you chose std of accel magnitude as a measure of stillness. To a first approximation, mean acceleration magnitude during a window would seem a measure of still ness - and the std of that imight not be stillness. If you feel it is right to keep the current plot then please explain more clearly why it communicates something useful. 
+
+Similarly you introduce concepts such as the log-space boundary without explaining what this is or why you have chosen it. 
+
+Are you using fixed windows or sliding window?  What are the pros and cons of those two approaches?
+
+You have refined your approach on this data compared to what you did on prior data. 
+
+# EighthPhase
+
+## 2026-07-12 Derek
+
+However, what we ideally want is a single analysis framework that provides the best output across the range of different challenges. Are you able to test algorithms across all the datasets and then evaluate which might work best for certain cases, and which might work best overall?
+
+So key issues:
+
+1. You are not solving a series of different problems, but trying to generate a location algorithm that addresses a range of challenges with RSSI data, by incorporating other sensor data (motion sensor, steps, pressure).
+2. Try to explain why your choice of metrics for the various algorithms makes sense.
+3. Clearly show the benefit of your algorithm either against a reference, or by saying you are correcting for implausible location changes and illustrate how you have corrected these. Use captions of figure, or zoom-ing in to clearly articulate the improvement
+4. It would be interesting to generate a combined analysis approach and try on all datasets - or if this isn’t possible, explain how such a unified analysis approach could be developed.

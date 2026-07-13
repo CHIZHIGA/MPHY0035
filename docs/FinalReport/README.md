@@ -176,3 +176,7 @@ It is important you put the results into the context of the background (prior li
 ### 2026-07-02
 
 You need to discuss the challenge of validating these location algoirthms as reference data has limitations: observation as a reference reduces the realism of the data; self-report is likely to have limited accuracy due to recall issues; so you are also using consistency and plausibility assessment by showing data to people it was collected from for qualitative assessment of credibility of the data
+
+### 2026-07-12
+
+Consider how the narrative of your algorithm development will be explained.  I realize you have done it all by “phase” but the report must describe it in terms of objectives and advances compared to state of the art.      So you might want to consider how you combine the different phases into a sections of a method, and sections of a results chapter in your thesis.  
