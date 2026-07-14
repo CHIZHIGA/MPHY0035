@@ -1,0 +1,239 @@
+{
+  "collections": [
+    {
+      "id": "Home_A002",
+      "participants": [
+        {
+          "id": "AA002",
+          "sessions": [
+            {
+              "id": "AA002_2023",
+              "timezone": "Europe/London",
+              "rssi": {"type": "separate", "path": "Data/Home_A002/AA002", "restrict_to_mapping": false},
+              "acc_path": "Data/Home_A002/AA002/SAMPLES_HE_ACC.csv",
+              "step_path": "Data/Home_A002/AA002/SAMPLES_Step_count.csv",
+              "wearable_pressure_path": "Data/Home_A002/AA002/SAMPLES_PRESSURE.csv",
+              "mapping": {"type": "none"}
+            }
+          ]
+        },
+        {
+          "id": "AB002",
+          "sessions": [
+            {
+              "id": "AB002_2023",
+              "timezone": "Europe/London",
+              "rssi": {"type": "separate", "path": "Data/Home_A002/AB002", "restrict_to_mapping": false},
+              "step_path": "Data/Home_A002/AB002/SAMPLES_Step_count.csv",
+              "wearable_pressure_path": "Data/Home_A002/AB002/SAMPLES_PRESSURE.csv",
+              "mapping": {"type": "none"}
+            }
+          ]
+        }
+      ],
+      "copresence_pairs": [["AA002", "AB002"]]
+    },
+    {
+      "id": "Home_X001",
+      "participants": [
+        {
+          "id": "LEFT_WRIST",
+          "sessions": [
+            {
+              "id": "LEFT_WRIST_2026",
+              "timezone": "UTC",
+              "rssi": {"type": "combined_tags", "path": "Data/Home_X001/LEFT_WRIST/SAMPLES_tags.csv"},
+              "acc_path": "Data/Home_X001/LEFT_WRIST/SAMPLES_HE_ACC.csv",
+              "step_path": "Data/Home_X001/LEFT_WRIST/SAMPLES_Step_count.csv",
+              "wearable_pressure_path": "Data/Home_X001/LEFT_WRIST/SAMPLES_PRESSURE.csv",
+              "mapping": {"type": "metadata_subject", "path": "Data/Home_X001/LEFT_WRIST/metadata_subject.json"}
+            }
+          ]
+        },
+        {
+          "id": "RIGHT_WRIST",
+          "sessions": [
+            {
+              "id": "RIGHT_WRIST_2026",
+              "timezone": "UTC",
+              "rssi": {"type": "combined_tags", "path": "Data/Home_X001/RIGHT_WRIST/SAMPLES_tags.csv"},
+              "acc_path": "Data/Home_X001/RIGHT_WRIST/SAMPLES_HE_ACC.csv",
+              "step_path": "Data/Home_X001/RIGHT_WRIST/SAMPLES_Step_count.csv",
+              "wearable_pressure_path": "Data/Home_X001/RIGHT_WRIST/SAMPLES_PRESSURE.csv",
+              "mapping": {"type": "metadata_subject", "path": "Data/Home_X001/RIGHT_WRIST/metadata_subject.json"}
+            }
+          ]
+        }
+      ],
+      "copresence_pairs": [["LEFT_WRIST", "RIGHT_WRIST"]]
+    },
+    {
+      "id": "NewData80h",
+      "participants": [
+        {
+          "id": "559662",
+          "sessions": [
+            {
+              "id": "559662_80h",
+              "timezone": "Europe/London",
+              "rssi": {
+                "type": "matrix",
+                "path": "Data/New data- 80 hour single user/559662/BEACONS_RSSI.csv",
+                "environmental_pressure_path": "Data/New data- 80 hour single user/559662/BEACONS_PRESSURE.csv"
+              },
+              "acc_path": "Data/New data- 80 hour single user/559662/HE_ACC.csv",
+              "wearable_pressure_path": "Data/New data- 80 hour single user/559662/PRESSURE.csv",
+              "mapping": {"type": "none"},
+              "mapping_override": {"3E05": "Bedroom", "CA59": "Stairs", "1933": "Room 1", "D7FD": "Room 2"}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "EF-001",
+      "participants": [
+        {
+          "id": "EF-001",
+          "sessions": [
+            {
+              "id": "EF-001_2026",
+              "timezone": "Etc/GMT+7",
+              "rssi": {"type": "combined_tags", "path": "Data/EF-001/SAMPLES_tags.csv"},
+              "acc_path": "Data/EF-001/SAMPLES_HE_ACC.csv",
+              "step_path": "Data/EF-001/SAMPLES_Step_count.csv",
+              "wearable_pressure_path": "Data/EF-001/SAMPLES_PRESSURE.csv",
+              "mapping": {"type": "metadata_subject", "path": "Data/EF-001/metadata_subject.json"}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "EF-002",
+      "participants": [
+        {
+          "id": "EF-002",
+          "sessions": [
+            {
+              "id": "EF-002_2026",
+              "timezone": "Etc/GMT+5",
+              "rssi": {"type": "combined_tags", "path": "Data/EF-002/SAMPLES_tags.csv"},
+              "acc_path": "Data/EF-002/SAMPLES_HE_ACC.csv",
+              "step_path": "Data/EF-002/SAMPLES_Step_count.csv",
+              "wearable_pressure_path": "Data/EF-002/SAMPLES_PRESSURE.csv",
+              "mapping": {"type": "metadata_subject", "path": "Data/EF-002/metadata_subject.json"}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Labelled_DH_Paris",
+      "participants": [
+        {
+          "id": "DH",
+          "sessions": [
+            {
+              "id": "DH_Paris_2024",
+              "timezone": "Europe/Paris",
+              "rssi": {"type": "separate", "path": "Data/labelledData/Paris NY2024/DH"},
+              "step_path": "Data/labelledData/Paris NY2024/DH/SAMPLES_Step_count.csv",
+              "mapping": {"type": "workbook", "path": "Data/labelledData/Paris NY2024/beacons Paris NY 2024.xlsx"},
+              "reference": {"path": "Data/labelledData/Analysis/Analysis DH Paris.xlsx", "sheet": "output_15min_20240107_171435"}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Labelled_DH_PanoH",
+      "participants": [
+        {
+          "id": "DH",
+          "sessions": [
+            {
+              "id": "DH_PanoH_2023",
+              "timezone": "Europe/Paris",
+              "rssi": {"type": "separate", "path": "Data/labelledData/DH DEC PANH"},
+              "step_path": "Data/labelledData/DH DEC PANH/SAMPLES_Step_count.csv",
+              "wearable_pressure_path": "Data/labelledData/DH DEC PANH/SAMPLES_PRESSURE.csv",
+              "mapping": {"type": "config_annotator", "path": "Data/labelledData/DH DEC PANH/CONFIG_ANNOTATOR.json"},
+              "reference": {"path": "Data/labelledData/Analysis/data_analysed_DH_PanoH.xlsx", "sheet": "without fallen beacon"}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Labelled_DH_Strad",
+      "participants": [
+        {
+          "id": "DH",
+          "sessions": [
+            {
+              "id": "DH_Strad_2023",
+              "timezone": "UTC",
+              "rssi": {"type": "separate", "path": "Data/labelledData/DH DEC STRAD"},
+              "step_path": "Data/labelledData/DH DEC STRAD/SAMPLES_Step_count.csv",
+              "mapping": {"type": "config_annotator", "path": "Data/labelledData/DH DEC STRAD/CONFIG_ANNOTATOR.json"},
+              "reference": {"path": "Data/labelledData/Analysis/data_analysed_DH_Strad.xlsx", "sheet": "data_analysed_DH_Strad"}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Labelled_KM_Mal",
+      "participants": [
+        {
+          "id": "KM",
+          "sessions": [
+            {
+              "id": "KM_Mal_2023",
+              "timezone": "Europe/Paris",
+              "rssi": {"type": "separate", "path": "Data/labelledData/KM DEC MAL"},
+              "acc_path": "Data/labelledData/KM DEC MAL/SAMPLES_HE_ACC.csv",
+              "step_path": "Data/labelledData/KM DEC MAL/SAMPLES_Step_count.csv",
+              "wearable_pressure_path": "Data/labelledData/KM DEC MAL/SAMPLES_PRESSURE.csv",
+              "mapping": {"type": "config_annotator", "path": "Data/labelledData/KM DEC MAL/CONFIG_ANNOTATOR.json"},
+              "reference": {"path": "Data/labelledData/Analysis/data_analysed_KM_Mal.xlsx", "sheet": "analysis"}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "KM_NOV23_PanH",
+      "participants": [
+        {
+          "id": "KM",
+          "sessions": [
+            {
+              "id": "KM_PanH_Nov22",
+              "timezone": "Europe/Paris",
+              "rssi": {"type": "separate", "path": "Data/labelledData/KM NOV23 PanH/Nov22nd"},
+              "acc_path": "Data/labelledData/KM NOV23 PanH/Nov22nd/SAMPLES_HE_ACC.csv",
+              "step_path": "Data/labelledData/KM NOV23 PanH/Nov22nd/SAMPLES_Step_count.csv",
+              "wearable_pressure_path": "Data/labelledData/KM NOV23 PanH/Nov22nd/SAMPLES_PRESSURE.csv",
+              "mapping": {"type": "config_annotator", "path": "Data/labelledData/KM NOV23 PanH/Nov22nd/CONFIG_ANNOTATOR.json"}
+            },
+            {
+              "id": "KM_PanH_Nov28",
+              "timezone": "Europe/Paris",
+              "rssi": {"type": "separate", "path": "Data/labelledData/KM NOV23 PanH/Nov28th"},
+              "acc_path": "Data/labelledData/KM NOV23 PanH/Nov28th/SAMPLES_HE_ACC.csv",
+              "step_path": "Data/labelledData/KM NOV23 PanH/Nov28th/SAMPLES_Step_count.csv",
+              "wearable_pressure_path": "Data/labelledData/KM NOV23 PanH/Nov28th/SAMPLES_PRESSURE.csv",
+              "mapping": {"type": "config_annotator", "path": "Data/labelledData/KM NOV23 PanH/Nov28th/CONFIG_ANNOTATOR.json"}
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "excluded": [
+    {"collection": "Home_A001", "reason": "annotation-only; no parseable raw wearable sensor and beacon streams"},
+    {"collection": "KM_DEC_PANAPT", "reason": "only encrypted/unexported SAMPLES.DAT is available; no parseable sensor CSV"}
+  ]
+}
