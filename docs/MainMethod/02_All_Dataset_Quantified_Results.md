@@ -549,8 +549,8 @@ sessions.
 ## 13. Report-Ready Overall Conclusion
 
 Across 25,513 five-minute windows from 13 sessions, the unified framework
-changed 674 raw strongest-beacon decisions and reduced consecutive observed room
-transitions from 3,353 to 3,048 (9.1%). It identified 61 main-sleep episodes in
+changed 579 raw strongest-beacon decisions and reduced consecutive observed room
+transitions from 3,353 to 2,961 (11.7%). It identified 61 main-sleep episodes in
 nine sessions and recovered 57 five-minute sleep gaps only when two-sided room
 context supported the episode-dominant room. The remaining awake RSSI gaps were
 preserved. All four labelled datasets improved in end-to-end reference
