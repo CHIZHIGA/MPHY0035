@@ -180,3 +180,69 @@ You need to discuss the challenge of validating these location algoirthms as ref
 ### 2026-07-12
 
 Consider how the narrative of your algorithm development will be explained.  I realize you have done it all by “phase” but the report must describe it in terms of objectives and advances compared to state of the art.      So you might want to consider how you combine the different phases into a sections of a method, and sections of a results chapter in your thesis.  
+
+### 2026-07-21
+
+You need a clear statement of aims/objectives at the end of the introduction that links to what you describe in the results and refer back to in the discussion.
+
+Codex record：
+
+我看完了，先不改。我的判断是：`03_Background` 目前基本可以先保留，`02_Introduction` 需要微调更多，因为它还停留在“项目按阶段推进”的旧叙事，而 `04/05` 已经转向 unified pipeline 主线了。
+
+建议调整这几处：
+
+1. `02` 的 objectives 要从“多个方法”改成“一个可审计 pipeline”
+   
+   现在第 5 行还是：
+   - preprocessing workflow
+   - RSSI baselines
+   - movement-aware / floor-aware methods
+   - behavioural summaries
+   - evaluation
+
+   这个方向不差，但还没突出第八阶段主贡献。建议之后改成：
+   - capability audit + five-minute common timeline
+   - unified movement-supported RSSI pipeline
+   - optional pressure / co-presence / behavioural branches
+   - compare general pipeline against dataset-specific methods
+   - evaluate with evidence-appropriate language
+
+2. `02` 第 6-9 行的“iterative analysis pathway”太像阶段总结
+
+   现在它从 earliest stage、Home_X001、later work、final stage 讲到 80h。这个和你导师 2026-07-12 的反馈有点冲突，因为看起来还是“我做了几个阶段”。
+
+   建议保留一句简短的“the method was developed iteratively”，但不要逐阶段展开。可以改成更像：
+   “Early analyses informed the final pipeline by identifying recurring problems: RSSI instability during low motion, missing RSSI during sleep, co-presence sensitivity, cross-floor ambiguity, and validation limits.”
+
+3. `02` 里 “final stage extended...” 已经过时
+
+   因为现在第八阶段才是核心，80h 不再是 final stage，而是 pressure branch / specialised downstream module 的对比案例。这里建议后面删掉“final stage”说法，避免和 `04/05` 冲突。
+
+4. `02` 里 aim 目前可以保留，但最好加一点“不声称成熟完美”
+
+   你说 pipeline 还不成熟，这个非常重要。Introduction 可以用稳妥措辞：
+   “to develop and assess an auditable framework”
+   而不是听起来像已经完成一个 fully validated system。
+
+   比如 “analysis and visualisation methods” 可以微调成 “an auditable analysis framework and visualisation outputs”。
+
+5. `03` 基本不用大改，但最后一句可以以后微调
+
+   `03` 最后一句现在是：
+   “Overall, this project uses interpretable BLE localisation as a foundation...”
+
+   这句可以轻微改成：
+   “This motivates an auditable pipeline...”
+   
+   这样和 `04` 接得更顺。但不急，`03` 现在没有明显问题。
+
+6. `03` 还可以补一点 “general pipeline vs bespoke method” 背景
+
+   因为 `05` 现在核心结果之一是 generality 有代价。Background 可以加一两句：real-world systems often need transferable, auditable methods, but dataset-specific tuning can improve performance at the cost of generalisability。这个会让 `05.6` 更自然。
+
+7. 引用不用现在动
+
+   如果只是这些轻微叙事调整，当前 `[1]-[7]` 大体还能用。等 `02/03` 最终文字稳定后再统一检查 reference 顺序比较好。
+
+简短结论：  
+`03` 是“可用，只需轻微衔接 unified pipeline”；`02` 需要从“阶段发展介绍”改成“clinical motivation + aim/objectives + final pipeline emerged from iterative problems”。这样它就不会和新的 `04/05` 打架。

@@ -17,7 +17,8 @@ The wording below is a rehearsal script, not text to read mechanically. During d
 
 **Target time: 0:20**
 
-Good morning. My project asks how wearable activity and room-level location evidence can be combined to give a more interpretable description of daily life at home. I developed and evaluated a unified pipeline that combines movement, Bluetooth signal strength and, where available, pressure and paired-participant data.
+Good afternoon. My project focus on how wearable activity and room-level location evidence can be combined to give a more interpretable description of daily life at home. I developed and evaluated a unified pipeline that combines movement, RSSI and pressure and multiple-participant data.
+
 
 **Transition:** I will begin with why location context matters clinically.
 
@@ -25,9 +26,9 @@ Good morning. My project asks how wearable activity and room-level location evid
 
 **Target time: 0:55**
 
-Traditional assessments and patient reports are useful, but they provide intermittent snapshots and can miss day-to-day variation. Wearables provide continuous activity measurements, but an activity count alone does not explain what the person was doing or where it occurred.
+Traditional assessments and patient reports are useful, but they can miss day-to-day variation. Wearable devices provide continuous activity measurements, but an activity count alone does not explain what the person was doing or where it occurred.
 
-For example, the same two thousand steps could represent movement between a bedroom and kitchen, repeated stair use, or activity outside the home. Its functional meaning may also change depending on whether another household member appears to be present. Room-level context can therefore make wearable measurements more relevant to routine, mobility and independence. This is particularly valuable in ageing and long-term disease, where change in everyday function may be clinically meaningful.
+For example, the same two thousand steps could represent movement between a bedroom and kitchen, repeated stair use, or activity outside the home. Room-level context can therefore make wearable measurements more relevant to routine, mobility and independence. This is particularly valuable in ageing and long-term disease, where change in everyday function may be clinically meaningful.
 
 **Transition:** Bluetooth beacons offer a practical source of this context, but their signals are imperfect.
 
@@ -35,11 +36,11 @@ For example, the same two thousand steps could represent movement between a bedr
 
 **Target time: 0:55**
 
-A transparent baseline is to assign each time window to the room containing the strongest Bluetooth Low Energy beacon. This is simple and requires little calibration.
+A transparent baseline is to assign each time window to the room containing the strongest BLE(Bluetooth Low Energy) beacon.
 
-However, RSSI—received signal strength—is noisy. It changes with body position and the physical environment. A transition window may contain signals from several rooms, and in a multi-floor home a strong signal can arrive from the wrong floor. Missing RSSI creates a further ambiguity: it may mean absence, occlusion, sensor failure or simply insufficient data.
+However, RSSI(received signal strength indicator) is noisy. It changes with body position and the physical environment. A transition window may contain signals from several rooms, and in a multi-floor home a strong signal can arrive from the wrong floor. Missing RSSI creates a further problem: it may mean absence, sensor failure or simply lack of data.
 
-Validation is also difficult. Continuous observation is intrusive and reduces realism, while diaries may be temporally coarse. The research gap is therefore not just improving a room label; it is combining evidence without hiding uncertainty.
+Validation is also difficult. Continuous observation reduces realism, while diaries may be not accurate enough. The research gap is therefore not just improving a room label; it is combining evidence without hiding uncertainty.
 
 ## Slide 4 — Aim: move from room labels to behavioural evidence
 
@@ -47,31 +48,29 @@ Validation is also difficult. Continuous observation is intrusive and reduces re
 
 My aim was to combine wearable movement, BLE RSSI and environmental context to describe behaviour in the home.
 
-The work had five connected objectives: first, reproducibly align the sensor streams; second, establish a transparent RSSI baseline; third, add movement and floor context; fourth, translate location estimates into behavioural summaries such as co-presence and transitions; and fifth, evaluate each dataset using the strongest evidence it can legitimately support.
+The work had five connected objectives: first, align the sensor streams; second, establish a transparent RSSI baseline; third, add movement and floor context; fourth, translate location estimates into behavioural summaries such as co-presence and transitions; and fifth, evaluate each dataset using the strongest evidence.
 
-The important framing is that location is intermediate evidence. The final purpose is to describe patterns of lived experience, not simply to maximise room-classification accuracy.
+The most important is that location is intermediate evidence. The final purpose is to describe patterns of lived experience, not simply to maximise room-classification accuracy.
 
 ## Slide 5 — Heterogeneous data require evidence-aware evaluation
 
 **Target time: 0:55**
 
-The datasets were heterogeneous. RSSI and either accelerometer or step data were required. Pressure, a paired participant and reference labels were available only in some collections.
+RSSI and either accelerometer or step data were required. Pressure, mutiple participant and reference labels were available only in some collections.
 
-I therefore used different levels of evaluation. Without reference labels, I report transition stability, correction provenance, coverage and visual plausibility. With existing annotations, I report coverage, conditional accuracy, balanced accuracy, macro-F1 and end-to-end agreement. These are described as agreement rather than ground-truth accuracy, because the annotations are not always independent observation.
-
-Importantly, reference labels are loaded only after the prediction timeline and model parameters are produced. Some rules were nevertheless refined after inspecting labelled development datasets, so genuinely unbiased validation still requires a new labelled collection after the rules are frozen.
+I therefore used different levels of evaluation. Without reference labels, I report transition stability, coverage and visual plausibility. With existing annotations, I report coverage, conditional accuracy, balanced accuracy, macro-F1 and end-to-end agreement. These are described as agreement rather than ground-truth accuracy, because the annotations are not always independent observation.
 
 ## Slide 6 — One auditable five-minute pipeline
 
 **Target time: 1:05**
 
-This is the final unified workflow. Every collection first undergoes a capability audit, and all available streams are aligned to non-overlapping five-minute windows in UTC, while local time is retained for interpretation.
+This is the final unified workflow. All available streams are aligned to non-overlapping five-minute windows in UTC, while local time is retained for interpretation.
 
 RSSI features include the strongest and second-strongest beacon, signal separation and coverage. Accelerometer magnitude variability is the preferred movement feature, with step increments used as a fallback.
 
 Movement states and the sleep, occupancy and reliable-pressure masks are then derived. These guide the movement-adaptive RSSI stage. The final timeline stores room, behaviour and occupancy separately, together with the correction reason and evidence source.
 
-Only after prediction do optional analyses calculate co-presence, reference agreement and cross-dataset summaries. The central principle is that RSSI proposes location, while contextual evidence decides whether to accept, stabilise, constrain or leave it unresolved.
+The central principle is that RSSI proposes location, while contextual evidence decides whether to accept, constrain or leave it unresolved.
 
 ## Slide 7 — Movement changes how RSSI is trusted
 
@@ -81,35 +80,27 @@ Movement is not used as a direct room classifier. Instead, it controls how much 
 
 During low movement, an isolated strongest-beacon change is more likely to be radio instability than a true transition, so the method uses a longer trailing history—up to thirty minutes. At higher movement, genuine transitions are more plausible, so the history shortens to between five and fifteen minutes.
 
-The awake branch is causal: it uses only current and previous evidence. Movement clusters are fitted separately for each session, because sensor scale and participant behaviour differ, but every session uses the same model-selection and failure rules.
-
 ## Slide 8 — Room, behaviour and occupancy remain separate
 
 **Target time: 0:55**
 
 A key design decision was to keep room, behaviour and occupancy as separate outputs. A window may have strong evidence of main sleep while its room remains unknown, or it may be classified as probable away without assigning an indoor room.
 
-The safeguards make this separation operational. Awake RSSI gaps are never interpolated. A short gap during a supported sleep episode is filled only when both neighbouring contexts support the same room. Pressure can constrain the candidate beacons only when the floor model and confidence checks pass; otherwise it selects an inactive K-equals-one null outcome. When evidence remains weak, the output is explicitly unresolved.
-
-This makes uncertainty auditable rather than hiding it through manual repair.
+The safeguards make this separation operational. Awake RSSI gaps are never interpolated. A short gap during a supported sleep episode is filled only when both neighbouring contexts support the same room. Pressure can constrain the candidate beacons only when the floor model and confidence checks pass.
 
 ## Slide 9 — The unified pipeline ran across 13 sessions without failure
 
 **Target time: 0:50**
 
-The unified pipeline processed ten collections and thirteen participant-sessions, covering 25,513 five-minute windows—approximately 2,126 hours—and produced no pipeline failures.
+The unified pipeline processed ten collections and thirteen participant-sessions, and produced no pipeline failures.
 
 Nine sessions used accelerometer movement and four used step fallback. Main sleep resolved in nine sessions; four remained unresolved because repeated-duration or room-support criteria were not met. Away-duration modelling resolved in all thirteen processed sessions.
-
-Two collections were excluded because suitable raw inputs were unavailable. That is different from an unresolved output: exclusion means the input could not be constructed, whereas unresolved is a valid result when the inputs exist but the evidence is insufficient.
 
 ## Slide 10 — Corrections were selective—not blanket smoothing
 
 **Target time: 0:55**
 
-Across all sessions, only 579 windows changed from the raw strongest-RSSI room—about 2.27 percent of the full timeline. Observed room transitions decreased from 3,353 to 2,961, a reduction of approximately 11.7 percent.
-
-Coverage changed by only 0.22 percentage points, from 76.48 to 76.70 percent. This small change is intentional: awake gaps are never filled.
+Across all sessions, only 579 windows changed from the raw strongest-RSSI room.
 
 Only 57 five-minute gaps were filled across the full run. Fifty-one were in EF-002 and six in KM PanH November 22. Most missing evidence therefore stayed missing. Reduced transition count is evidence of stability, but it is not by itself proof of improved accuracy.
 
@@ -117,7 +108,7 @@ Only 57 five-minute gaps were filled across the full run. Fifty-one were in EF-0
 
 **Target time: 1:05**
 
-In the four labelled collections, end-to-end agreement improved after correction. It increased from 28.1 to 61.9 percent in DH Paris, from 56.3 to 89.6 in DH PanoH, from 57.9 to 82.0 in DH Strad, and from 57.1 to 85.8 in KM Mal.
+In the four labelled collections, end-to-end agreement improved after correction.
 
 The mechanism matters. In the three DH datasets, much of the end-to-end gain came from explicitly representing probable-away periods and matching reference Out labels, rather than from room smoothing alone. KM Mal showed stronger room-level sleep correction.
 
@@ -141,17 +132,15 @@ The same timeline supports two extensions closer to lived experience.
 
 For the two-person Home_X001 collection, each participant was processed independently before their timelines were aligned. Corrected same-room time was 32.67 hours. Correction added 41 co-presence windows and removed 48, so it did not simply increase apparent togetherness. Without an independent reference, this is estimated co-presence, not verified social interaction.
 
-In the two-floor 80-hour dataset, the pressure branch automatically recovered two stable beacon groups, with a silhouette of 0.865. It changed only five strongest-beacon windows through pressure and seven windows overall. In the single-floor Home_X001 case, the same rules selected the K-equals-one null model. This demonstrates both an active and an appropriately inactive optional branch.
+In the two-floor 80-hour dataset, the pressure branch automatically recovered two stable beacon groups.  In the single-floor Home_X001 case, the same rules selected the K=1(means one floor). This demonstrates the robustness of the pressure branch.
+
 
 ## Slide 14 — Generalisability came with an explicit trade-off
 
 **Target time: 1:00**
 
-The unified method gains an auditable schema across heterogeneous sessions, explicit missing and unresolved states, correction provenance and optional behavioural branches.
+My interpretation of the unified method is therefore deliberately bounded: this is a useful and reproducible framework for exploratory home-behaviour analysis, but it is not yet a validated clinical system. The next validation should freeze the rules and test them across new labelled participants and home layouts.
 
-The trade-off is that a general method is not always the best classifier for an individual dataset. Threshold values still adapt per session, step absence is weaker evidence than accelerometer variability, and independent reference labels remain limited. The pressure-derived behavioural analysis is also based on one 80-hour multi-floor case.
-
-My interpretation is therefore deliberately bounded: this is a useful and reproducible framework for exploratory home-behaviour analysis, but it is not yet a validated clinical system. The next validation should freeze the rules and test them across new labelled participants and home layouts.
 
 ## Slide 15 — Take-home message
 
