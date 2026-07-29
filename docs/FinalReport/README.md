@@ -181,13 +181,15 @@ You need to discuss the challenge of validating these location algoirthms as ref
 
 Consider how the narrative of your algorithm development will be explained.  I realize you have done it all by “phase” but the report must describe it in terms of objectives and advances compared to state of the art.      So you might want to consider how you combine the different phases into a sections of a method, and sections of a results chapter in your thesis.  
 
-### 2026-07-21
+### 2026-07-21 revision of the introduction
+
+This revision of the introduction needs to be done after the results and discussion sections are completed.
 
 You need a clear statement of aims/objectives at the end of the introduction that links to what you describe in the results and refer back to in the discussion.
 
 Codex record：
 
-我看完了，先不改。我的判断是：`03_Background` 目前基本可以先保留，`02_Introduction` 需要微调更多，因为它还停留在“项目按阶段推进”的旧叙事，而 `04/05` 已经转向 unified pipeline 主线了。
+`03_Background` 目前基本可以先保留，`02_Introduction` 需要微调更多，因为它还停留在“项目按阶段推进”的旧叙事，而 `04/05` 已经转向 unified pipeline 主线了。
 
 建议调整这几处：
 
@@ -226,23 +228,5 @@ Codex record：
 
    比如 “analysis and visualisation methods” 可以微调成 “an auditable analysis framework and visualisation outputs”。
 
-5. `03` 基本不用大改，但最后一句可以以后微调
-
-   `03` 最后一句现在是：
-   “Overall, this project uses interpretable BLE localisation as a foundation...”
-
-   这句可以轻微改成：
-   “This motivates an auditable pipeline...”
-   
-   这样和 `04` 接得更顺。但不急，`03` 现在没有明显问题。
-
-6. `03` 还可以补一点 “general pipeline vs bespoke method” 背景
-
-   因为 `05` 现在核心结果之一是 generality 有代价。Background 可以加一两句：real-world systems often need transferable, auditable methods, but dataset-specific tuning can improve performance at the cost of generalisability。这个会让 `05.6` 更自然。
-
-7. 引用不用现在动
-
-   如果只是这些轻微叙事调整，当前 `[1]-[7]` 大体还能用。等 `02/03` 最终文字稳定后再统一检查 reference 顺序比较好。
-
 简短结论：  
-`03` 是“可用，只需轻微衔接 unified pipeline”；`02` 需要从“阶段发展介绍”改成“clinical motivation + aim/objectives + final pipeline emerged from iterative problems”。这样它就不会和新的 `04/05` 打架。
+`02` 需要从“阶段发展介绍”改成“clinical motivation + aim/objectives + final pipeline emerged from iterative problems”。这样它就不会和新的 `04/05` 打架。
