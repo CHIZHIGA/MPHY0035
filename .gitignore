@@ -10,6 +10,7 @@
 !**/*.md
 !src/
 !src/**
+!docs/FinalReport/code_screenshots/*.py
 
 # Still ignore generated/cache files inside src
 src/**/__pycache__/

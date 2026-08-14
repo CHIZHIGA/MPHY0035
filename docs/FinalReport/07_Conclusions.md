@@ -1,48 +1,9 @@
 # 7. Conclusions
 
-Writing status: write near the end.
+This project aimed to combine wearable movement, RSSI-derived environmental beacon data, and available environmental context to produce more interpretable descriptions of lived experience at home. The final contribution is an auditable five-minute pipeline in which RSSI provides a transparent location proposal, while movement, behavioural state, missingness, and optional pressure evidence determine whether that proposal is retained, stabilised, constrained, or left unresolved. Room, behaviour, and occupancy remain separate so that uncertainty is not hidden by a single continuous location label.
 
-This chapter should summarise the project in 3-5 paragraphs. Do not introduce new results here.
+The framework processed 13 participant-sessions from ten collections without pipeline failure. Across 25,513 windows, correction changed 579 room estimates and reduced observed room transitions by 11.7%, while room coverage increased only slightly. This reflects the intended conservative behaviour: awake RSSI gaps were not interpolated, unsupported sleep remained unresolved, and pressure could select a null outcome. The resulting timelines also supported main-sleep, probable-away, floor-context, room-transition, and two-person co-presence summaries.
 
-## Draft Structure
+Agreement with reference annotations improved from raw to corrected output across all four labelled datasets when end-to-end coverage was considered. However, earlier dataset-specific methods retained stronger balanced room agreement in several comparisons. The unified pipeline should therefore not be interpreted as the best room classifier for every dataset. Its advantage is a common output structure, explicit provenance, unresolved-state handling, and applicability across different sensor combinations.
 
-Paragraph 1:
-
-- Restate the project aim.
-- Mention home behaviour, RSSI-derived location, movement sensing, and co-presence.
-
-Paragraph 2:
-
-- Summarise the implemented workflow.
-- Mention the full project progression: annotation-based visualisation, AA002 raw-data exploration, Home_X001 no-reference co-presence analysis, fixed-window RSSI, step-adaptive RSSI, low-motion clustering, labelled-data evaluation, and visualisation.
-- Make clear that the project became progressively deeper, with the later RSSI/movement-fusion and labelled-data stages providing the main final evidence.
-
-Paragraph 3:
-
-- Summarise the main findings.
-- State that RSSI strongest-beacon methods are strong interpretable baselines.
-- State that step-adaptive RSSI provides a movement-aware method and is often competitive.
-- State that low-motion clustering is useful as exploratory signal-state analysis but not yet a replacement for direct RSSI location estimation.
-
-Paragraph 4:
-
-- Summarise limitations.
-- Distinguish labelled-data evaluation from no-reference descriptive analysis.
-- Avoid unsupported ground-truth claims.
-
-Paragraph 5:
-
-- State the final contribution and future direction.
-- Mention that stronger independent reference labels and additional sensors could improve evaluation and method development.
-
-## Placeholder Conclusion
-
-TODO: Write after Results and Discussion are final.
-
-## TODO Later
-
-- Add final quantitative headline values.
-- Keep conclusion concise and avoid new figures or new claims.
-- Match wording to the final abstract.
-- Make the final conclusion recognise all five stages without becoming a chronological work log.
-- Reflect the progressive weighting: early stages as foundation, later stages as main evidence.
+The main limitation is the absence of an independent labelled test collection after the pipeline rules were finalised. No-reference co-presence and behavioural outputs remain descriptive, while sleep, away, and floor-transition states are evidence-supported estimates rather than verified clinical outcomes. Overall, the project demonstrates that wearable activity becomes more meaningful when interpreted alongside spatial and household context. The framework provides a reproducible basis for future validation and for developing longitudinal measures of routine, mobility, independence, and co-presence.

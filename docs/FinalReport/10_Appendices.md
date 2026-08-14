@@ -34,7 +34,19 @@ MPLCONFIGDIR=/tmp/matplotlib PYTHONPATH=src \
 
 ## Appendix B: Key Algorithmic Code Extracts
 
-The following extracts are shortened from the implementation. They show the key algorithmic decisions without reproducing the full source code.
+Seven screenshot-ready files containing verbatim function bodies are provided in `docs/FinalReport/code_screenshots`. Minimal import blocks were added to avoid unresolved-name diagnostics in VS Code, and each function body was checked directly against the stated source lines. These files should be used when producing code screenshots for the submitted Appendix because they preserve the implemented logic while removing unrelated surrounding code.
+
+| Screenshot order | Screenshot-ready file | Original source | Algorithmic role |
+|---:|---|---|---|
+| 1 | [`01_pipeline_orchestration.py`](code_screenshots/01_pipeline_orchestration.py) | `run_pipeline.py`, lines 90-129 | Shows input loading, movement preview, optional pressure constraint, unified inference, and audit assembly |
+| 2 | [`02_ordered_clustering.py`](code_screenshots/02_ordered_clustering.py) | `core.py`, lines 69-155 | Shows automatic ordered KMeans selection, cluster-size checks, silhouette checks, and unresolved fallback |
+| 3 | [`03_sleep_identification.py`](code_screenshots/03_sleep_identification.py) | `core.py`, lines 241-303 | Shows all-day low-motion episode construction and main-sleep duration clustering |
+| 4 | [`04_sleep_room_correction.py`](code_screenshots/04_sleep_room_correction.py) | `core.py`, lines 421-461 | Shows episode-dominant room correction and two-sided sleep-gap support |
+| 5 | [`05_awake_adaptive_rssi.py`](code_screenshots/05_awake_adaptive_rssi.py) | `core.py`, lines 464-510 | Shows movement-state-specific trailing RSSI windows and evidence boundaries |
+| 6 | [`06_pressure_floor_gate.py`](code_screenshots/06_pressure_floor_gate.py) | `pressure.py`, lines 22-127 | Shows automatic pressure grouping, physical separation safeguards, and K=1 null outcome |
+| 7 | [`07_reference_and_copresence.py`](code_screenshots/07_reference_and_copresence.py) | `evaluation.py`, lines 56-138 | Shows coverage-aware reference metrics and post-hoc two-person co-presence |
+
+For a shorter submitted Appendix, Screenshots 1, 2, 4, 5, and 6 provide the clearest account of the central pipeline. Screenshot 7 should be retained if evaluation or co-presence implementation needs to be demonstrated. The compact code blocks below are explanatory reductions of the same logic; they are not intended to replace the verbatim screenshot files.
 
 ### B.1 Core Parameters
 
